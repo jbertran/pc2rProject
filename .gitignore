@@ -1,0 +1,7 @@
+# ocaml
+*.cmo
+*.cmi
+
+# emacs
+*~
+\#*

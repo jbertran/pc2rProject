@@ -1,33 +1,18 @@
-module GameState = 
-  sig
-    type Color = R | G | V | B     
-    type Dir = H | B | G | D
-    type Coords = 
-      {
-        mutable x : int;
-        mutable y : int;
-      }
-    type Game = 
+    type color = R | G | V | B
+    type dir = H | B | G | D
+    type game = 
       {
         (* Robots *)
-        robot_j : Coords;
-        robot_v : Coords;
-        robot_b : Coords;
-        robot_r : Coords;
-
+        robots: (int * int) array;
         (* Destinations *)
-        dest_j : Coords;
-        dest_v : Coords;
-        dest_b : Coords;
-        dest_r : Coords;
-
+        dests: (int * int) array;
         (* Matrice murs *)
-        murs : (Dir list) array array;
+        murs : dir list array array;
       }
-    val init_state: unit -> Game
-    val walls: int * int -> Dir list
-    val hasWall: int * int * dir -> bool
-    val robot: Color -> Coords
-    val move_robot: Color * Dir -> unit
-    val goal: Color -> Coords
-  end 
+    val init_state : string -> unit
+    val wall_list : unit -> string
+    val walls : int -> int -> dir list
+    val hasWall : int -> int -> dir -> bool
+    val robot : color -> (int * int)
+    val move_robot : color -> dir -> unit
+    val goal : color -> (int * int)
