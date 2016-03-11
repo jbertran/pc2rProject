@@ -1,7 +1,9 @@
 module GameState = 
   sig
-    type Color = R | G | V | B     
-    type Dir = H | B | G | D
+    type Mur = H 
+             | B
+             | G 
+             | D
     type Coords = 
       {
         mutable x : int;
@@ -22,11 +24,7 @@ module GameState =
         dest_r : Coords;
 
         (* Matrice murs *)
-        murs : (Dir list) array array;
+        murs : (Mur list) array array;
       }
-    val init_state: unit -> Game
-    val walls: int * int -> bool
-    val robot: Color -> Coords
-    val move_robot: Color * Dir -> unit
-    val goal: Color -> Coords
+    val init_state: unit -> Game;
   end 
