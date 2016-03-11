@@ -25,7 +25,8 @@ module GameState =
         murs : (Dir list) array array;
       }
     val init_state: unit -> Game
-    val walls: int * int -> bool
+    val walls: int * int -> Dir list
+    val hasWall: int * int * dir -> bool
     val robot: Color -> Coords
     val move_robot: Color * Dir -> unit
     val goal: Color -> Coords
