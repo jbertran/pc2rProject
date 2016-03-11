@@ -1,0 +1,22 @@
+#include <iostream>
+#include <sys/types.h>        
+#include <sys/socket.h>
+#include "client.h" 
+
+#define SERVER_PORT 2016
+
+Socket sock;
+
+void init() {
+  /* Struct hostinfo */
+  sock = socket(PF_INET, SOCK_STREAM, 0);
+  if (sock == INVALID_SOCKET) {
+    perror("Socket init");
+    exit(errno);
+  }
+  
+}
+
+void listen() {
+  
+}
