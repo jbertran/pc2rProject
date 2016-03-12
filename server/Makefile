@@ -3,11 +3,17 @@ LD=str.cma
 
 all: link
 
-link: interfaces gameState tools
-	$(CC) -o gameState $(LD) gameState.cmo 
+link: interfaces gameState
+	$(CC) -o gameState $(LD) gameState.cmo
+
+test: interfaces gameState test.cmo
+	$(CC) -o test $(LD) gameState.cmo test.cmo
 
 interfaces: *.mli
 	$(CC) -c $^
+
+%.cmo: %.ml
+	$(CC) -c $<
 
 gameState: interfaces gameState.ml
 	$(CC) -c gameState.ml

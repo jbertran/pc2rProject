@@ -119,6 +119,8 @@ let init_state confFile =
   let (h, w, wallList) = read_walls_file confFile in
   game_state.height <- h;
   game_state.width <- w;
+  (* Préparation des murs *)
+  game_state.murs <- (Array.make_matrix h w []);
   (* Murs extérieurs *)
   for i = 0 to (game_state.height - 1) do
     addWall i 0 G;
@@ -136,23 +138,22 @@ let init_state confFile =
   game_state.robot_cible <- r_color;
   game_state.cible <- (0, 0);
   (* Murs intérieurs *)
-  game_state.murs <- (Array.make_matrix 2 2 []);
-  (*
-  set_walls wallList*);;
+  set_walls wallList;;
 
 let rec print_walls strp x y l =
+  let append strp c = 
+    strp := !strp ^ "(" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ "," ^ c ^ ")"                                                                                    
+  in
   match l with
     h::t -> 
     begin 
-      let c =
-        match h with
-          H -> "H"
-        | B -> "B"
-        | G -> "G"
-        | D -> "D"
-      in
-      strp := !strp ^ "(" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ "," ^ c ^ ")";
-      print_walls strp x y t;
+      match h with
+        H -> if (x == 0) then print_walls strp x y t else append strp "H"
+      | B -> if (x == (game_state.height - 1)) then print_walls strp x y t 
+               else append strp "B"
+      | G -> if (y == 0) then print_walls strp x y t else append strp "G"
+      | D -> if (y == (game_state.width - 1)) then print_walls strp x y t
+             else append strp "D"
     end
   | [] -> ()
             
@@ -265,7 +266,3 @@ let is_valid movelist =
   in valid_rec movelist
 ;;
     
-let main () =
-  read_walls_file "conf/basegame.conf";;
-
-main ();;

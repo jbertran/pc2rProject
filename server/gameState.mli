@@ -12,6 +12,7 @@ val init_state : string -> unit
 val wall_list : unit -> string
 val walls : int -> int -> dir list
 val hasWall : int -> int -> dir -> bool
+val addWall : int -> int -> dir -> unit
 
 (* Gestion du robot *)
 val robot : color -> (int * int)
