@@ -1,4 +1,4 @@
-type color = C_R | C_G | C_V | C_B
+type color = C_R | C_J | C_V | C_B
 type dir = H | B | G | D
 type game = 
   {
@@ -27,5 +27,6 @@ val move_robot : (int * int) -> dir -> (int * int)
 val goal : unit -> (int * int)
 
 (* Copie de l'état initial *)
-val copy_state : unit -> game
-
+val copy_state : unit -> game 
+val get_state : unit -> string
+val is_valid : (color * dir) list -> bool

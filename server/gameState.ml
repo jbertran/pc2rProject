@@ -1,7 +1,7 @@
 (**************************)
 (******    TYPES      *****)
 (**************************)
-type color = C_R | C_G | C_V | C_B;;
+type color = C_R | C_J | C_V | C_B;;
 type dir = H | B | G | D;;
 type game = 
   {
@@ -59,14 +59,18 @@ let copy_state () =
 let addWall x y dir = 
   game_state.murs.(x).(y) <- dir::game_state.murs.(x).(y);;
 
+
 let set_walls_from_file fp =
+  ();;
+(*
   let wall_list = Tools.read_walls_file fp in
   let rec set_walls l= 
     match l with 
       (x, y, d)::t -> addWall x y d; set_walls t
     | [] -> ()
   in set_walls wall_list
-;;
+;;*)
+
 let init_state confFile = 
   (* Murs extérieurs *)
   for i = 0 to (game_height - 1) do
@@ -81,7 +85,7 @@ let init_state confFile =
   let poslist = ref [] in
   init_pos game_state.robots 4 poslist;
   let r_cible = Random.int 4 in
-  let r_color = match r_cible with 0 -> C_R | 1 -> C_G | 2 -> C_V | 3 -> C_B in
+  let r_color = match r_cible with 0 -> C_R | 1 -> C_J | 2 -> C_V | 3 -> C_B in
   game_state.robot_cible := r_color;
   game_state.cible := (0, 0);
   (* Murs intérieurs *)
@@ -130,9 +134,9 @@ let goal () =
 let robot col = 
   match col with
     C_R -> game_state.robots.(0)
-  | C_G -> game_state.robots.(1)
-  | C_V -> game_state.robots.(2)
-  | C_B -> game_state.robots.(3)
+  | C_B -> game_state.robots.(1)
+  | C_J -> game_state.robots.(2)
+  | C_V -> game_state.robots.(3)
 ;;
   
 let rec move_robot pos dir = 
@@ -159,3 +163,41 @@ let rec move_robot pos dir =
      else
        move_robot (x, (y+1)) dir
 ;;
+
+let set_robot gs pos col = 
+  let (x, y) = pos in
+  match col with 
+    C_R -> gs.robots.(0) <- (x, y)
+  | C_B -> gs.robots.(0) <- (x, y)
+  | C_J -> gs.robots.(0) <- (x, y)
+  | C_V -> gs.robots.(0) <- (x, y)
+;;
+
+let get_state () =
+  let robots = ref "" in
+  for i=0 to 3; do
+    let (x, y) = game_state.robots.(i) in
+    robots := !robots ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ ",";
+  done;
+  let (xc, yc) = !(game_state.cible)
+  and col = match !(game_state.robot_cible) with C_R -> "R"  | C_J -> "J" 
+                                          | C_V -> "V"  | C_B -> "B" 
+  in
+  "(" ^ !robots ^ (string_of_int xc) ^ "," ^ (string_of_int yc) ^ "," ^ col ^ ")"
+;;
+
+let is_valid movelist = 
+  let tmpstate = copy_state () in
+  let rec valid_rec l = 
+    match l with
+      (col, d)::tail -> 
+      let (xm, ym) = move_robot (robot col) d in
+      set_robot tmpstate (xm, ym) col;
+      valid_rec tail
+    | [] -> 
+       let (xc, yc) = !(tmpstate.cible)
+       and (xr, yr) = (robot !(tmpstate.robot_cible)) in
+       ((xc == xr) && (yc == yr))
+  in valid_rec movelist
+;;
+    
