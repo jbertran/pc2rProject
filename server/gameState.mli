@@ -3,8 +3,8 @@ type dir = H | B | G | D
 type game = 
   {
     (* Robots *)
-    robot_cible : color ref;
-    cible : (int * int) ref;
+    mutable robot_cible : color;
+    mutable cible : (int * int);
     robots: (int * int) array;
     (* Matrice murs *)
     murs : dir list array array;

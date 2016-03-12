@@ -6,8 +6,8 @@ type dir = H | B | G | D;;
 type game = 
   {
     (* Robots *)
-    robot_cible: color ref;
-    cible : (int * int) ref;
+    mutable robot_cible: color;
+    mutable cible : (int * int);
     robots: (int * int) array;
     (* Matrice murs *)
     murs : (dir list) array array;
@@ -20,8 +20,8 @@ let game_width = 16;;
 let game_height = 16;;
 let empty_state = 
   {
-    robot_cible = ref C_B;
-    cible = ref (0, 0);
+    robot_cible = C_B;
+    cible = (0, 0);
     robots = Array.make 4 (0, 0);
     murs = (Array.make_matrix game_height game_width []); 
   };;
@@ -50,8 +50,8 @@ let copy_state () =
     newmurs.(i) <- Array.copy game_state.murs.(i);
   done;
   {
-    robot_cible = ref !(game_state.robot_cible);
-    cible = ref !(game_state.cible);
+    robot_cible = game_state.robot_cible;
+    cible = game_state.cible;
     robots = Array.copy game_state.robots;
     murs = newmurs
   }
@@ -86,8 +86,8 @@ let init_state confFile =
   init_pos game_state.robots 4 poslist;
   let r_cible = Random.int 4 in
   let r_color = match r_cible with 0 -> C_R | 1 -> C_J | 2 -> C_V | 3 -> C_B in
-  game_state.robot_cible := r_color;
-  game_state.cible := (0, 0);
+  game_state.robot_cible <- r_color;
+  game_state.cible <- (0, 0);
   (* Murs intérieurs *)
   set_walls_from_file confFile;;
 
@@ -128,7 +128,7 @@ let wall_list () =
   !strp;;
 
 let goal () = 
-  !(game_state.cible)
+  game_state.cible
 ;;
 
 let robot col = 
@@ -179,8 +179,8 @@ let get_state () =
     let (x, y) = game_state.robots.(i) in
     robots := !robots ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ ",";
   done;
-  let (xc, yc) = !(game_state.cible)
-  and col = match !(game_state.robot_cible) with C_R -> "R"  | C_J -> "J" 
+  let (xc, yc) = game_state.cible
+  and col = match game_state.robot_cible with C_R -> "R"  | C_J -> "J" 
                                           | C_V -> "V"  | C_B -> "B" 
   in
   "(" ^ !robots ^ (string_of_int xc) ^ "," ^ (string_of_int yc) ^ "," ^ col ^ ")"
@@ -195,8 +195,8 @@ let is_valid movelist =
       set_robot tmpstate (xm, ym) col;
       valid_rec tail
     | [] -> 
-       let (xc, yc) = !(tmpstate.cible)
-       and (xr, yr) = (robot !(tmpstate.robot_cible)) in
+       let (xc, yc) = tmpstate.cible
+       and (xr, yr) = robot tmpstate.robot_cible in
        ((xc == xr) && (yc == yr))
   in valid_rec movelist
 ;;
