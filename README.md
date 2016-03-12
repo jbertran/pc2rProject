@@ -12,8 +12,6 @@ Clément Bertrand, Jordi Bertran de Balanda
 ### TODO: 
 
 * Fix la visibilité de GameState.dir etc
-* Fonction move list -> bool -- déplacements valides ou non?
-* Fonction unit -> string -- état courant du plateau
 
 ## Client - CPP
 
