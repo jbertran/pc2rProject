@@ -182,6 +182,14 @@ let robot col =
   | C_V -> game_state.robots.(3)
 ;;
 
+let hasRobot x y = 
+  let ret = ref false in
+  for i=0 to 3 do
+    let (xr, yr) = game_state.robots.(i) in
+    if ((xr == x) && (yr == y)) then ret := true else ()
+  done;
+  !ret;;
+
 let get_state () =
   let robots = ref "" in
   for i=0 to 3; do
@@ -215,22 +223,22 @@ let rec move_robot pos d =
   let x, y = pos in
   match d with 
     H ->  
-    if ((hasWall x y H) || (hasWall (x-1) y B)); then
+    if ((hasWall x y H) || (hasWall (x-1) y B) || (hasRobot (x-1) y)); then
       (x, y)
     else
       move_robot ((x-1), y) d
   | B ->
-     if ((hasWall x y B) || (hasWall (x+1) y H)); then
+     if ((hasWall x y B) || (hasWall (x+1) y H) || (hasRobot (x+1) y)); then
        (x, y)
      else
        move_robot ((x+1), y) d
   | G ->
-     if ((hasWall x y G) || (hasWall x (y-1) D)); then
+     if ((hasWall x y G) || (hasWall x (y-1) D) || (hasRobot x (y-1))); then
        (x, y)
      else
        move_robot (x, (y-1)) d
   | D -> 
-     if ((hasWall x y D) || (hasWall x (y+1) G)); then
+     if ((hasWall x y D) || (hasWall x (y+1) G) || (hasRobot x (y+1))); then
        (x, y)
      else
        move_robot (x, (y+1)) d
