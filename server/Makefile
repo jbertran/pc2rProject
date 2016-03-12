@@ -1,6 +1,6 @@
 all: gameState tools
 
-gameState: gameState.ml gameState.mli
+gameState: tools gameState.ml gameState.mli
 	ocamlc -c gameState.mli
 	ocamlc -c gameState.ml
 
