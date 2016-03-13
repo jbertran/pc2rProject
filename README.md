@@ -35,22 +35,23 @@ __Nécessaire__ avant d'utiliser GameState pour une partie:
 init_state filepath
 ```
 
-## Client - CPP
+## Client - C++
 
-### client.cpp
+### client
 
-Connexion et boucle de réaction aux messages du serveur, support des envois de messages au serveur.
+Connexion au serveur, envois de messages.
 
-### gamestate.cpp
+### session
 
-Représentation du jeu en cours
+Gestion d'une partie ouverte - utilise client pour communiquer avec le serveur.
 
-### guiapplication.cpp
+### repr
 
-Application Qt.
+Représentation du jeu. Chaque session contient une repr pour l'énigme fournie par le serveur, et une repr pour représenter les mouvements du joueur.
 
 ### TODO
 
 * Better hostname support in client.cpp
-* Finish gamestate
+* Finish repr
 * GUI
+* Test everything
