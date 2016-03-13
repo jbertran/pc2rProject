@@ -2,6 +2,9 @@
 *.cmo
 *.cmi
 
+# cpp
+*.o
+
 # emacs
 *~
 \#*

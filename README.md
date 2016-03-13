@@ -2,6 +2,11 @@
 
 Clément Bertrand, Jordi Bertran de Balanda
 
+## Dépendances
+
+* Serveur: ocamlc
+* Client: g++, Qt.
+
 ## Serveur - OCAML
 
 ### GameState.ml
@@ -30,10 +35,22 @@ __Nécessaire__ avant d'utiliser GameState pour une partie:
 init_state filepath
 ```
 
-### TODO: 
-
-* Fix la visibilité de GameState.dir etc
-
 ## Client - CPP
 
-Trop cool.
+### client.cpp
+
+Connexion et boucle de réaction aux messages du serveur, support des envois de messages au serveur.
+
+### gamestate.cpp
+
+Représentation du jeu en cours
+
+### guiapplication.cpp
+
+Application Qt.
+
+### TODO
+
+* Better hostname support in client.cpp
+* Finish gamestate
+* GUI
