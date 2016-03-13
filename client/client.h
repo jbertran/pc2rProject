@@ -2,10 +2,13 @@
 #define __client__
 #include "tools.h"
 
-int init(char* hname, int port);
-status handshake(int sock, std::string user);
-void listen(int sock);
-void client_terminate();
-void send_message(std::string message);
-
+class client {
+  int sock;
+ public:
+  client(char* hname, int port);
+  int getSocket() { return sock; };
+  status handshake(std::string user);
+  void terminate();
+  void send_message(std::string message);
+};
 #endif
