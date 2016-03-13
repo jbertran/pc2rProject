@@ -27,11 +27,30 @@ void session::handleWelcomeMsg(vector<string> args) {
 
 void session::handleSessionMsg(vector<string> args) {
   string game = args[0];
+  vector<string> walls = split(game, ')');
+  for (string wall : walls) {
+    wall = wall.substr(1, string::npos);
+    vector<string> coords = split(wall, ',');
+    // Do something with the repr
+    //game.addWall(coords[0], coords[1], coords[2]);
+  }
 }
 
 void session::handleTurnMsg(vector<string> args) {
   string enigme = args[0];
   string bilan = args[1];
+  // Dpkg the turn's puzzle
+  enigme = enigme.substr(1, enigme.length() - 2);
+  vector<string> positions = split(enigme, ',');
+  string tmp = "";
+  while (bilan[0] != '(') {
+    tmp += bilan[0];
+    bilan = bilan.substr(1, string::npos);
+  }
+  int score = stoi(tmp);
+  bilan = bilan.substr(1, bilan.length() - 2);
+  vector<string> scores = split(bilan, ',');
+  // Do something with these
 }
 
 void session::handleWinnerMsg(vector<string> args) {
@@ -85,6 +104,13 @@ void session::handleHisSolMsg(vector<string> args) {
   string user = args[0];
   string depl = args[1];
   cout << "Solution de " << user << ": " << depl << endl;
+  int i = 0;
+  while (i < depl.length()) {
+    char robot = depl[i];
+    char dir = depl[i+1];
+    // Do something with this
+    i += 2;
+  }
 }
 
 void session::handleGoodSolMsg(vector<string> args) {

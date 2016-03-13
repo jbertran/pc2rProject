@@ -2,7 +2,6 @@
 #define __tools__
 
 enum class status {OK, KO};
-enum class Outgoing {};
 enum class Incoming {WELCOME, CONNECTE, SORTI, SESSION, VAINQ, TOUR, TUAT, ILAT, FINREF,
     TUENCH, ECHECENCH, ILENCH, FINENCH, SASOL, BONNE, MAUVAISE, FINRESO, TROPLONG};
 enum class Phase {IDLE, THINK, AUCTION, SOLVE};

@@ -12,6 +12,19 @@ void session::start() {
   while (shouldrun) {
     string msg = *sock_recv(sock);
     vector<string> args = *getArgs(msg);
+
+    /** General commands **/
+    if (getCmd(msg) == Incoming::CONNECTE) {
+      handleConnectMsg(args);
+      }
+    else if (getCmd(msg) == Incoming::SORTI) {
+      handleLeftMsg(args);
+    }
+    else {
+      cerr << "Unexpected message received: " << msg << endl;
+    }
+
+    /** Phase-dependent commands **/
     switch(current_ph) {
     case Phase::IDLE:
       switch (getCmd(msg)) {
@@ -95,14 +108,7 @@ void session::start() {
       }
       break;
     default:
-      /** Les commandes à écouter quelle que soit la phase**/
-      if (getCmd(msg) == Incoming::CONNECTE) {
-      }
-      else if (getCmd(msg) == Incoming::SORTI) {
-      }
-      else {
-	cerr << "Unexpected message received: " << msg << endl;
-      }
+      break;
     }
   }
 }

@@ -1,12 +1,16 @@
 #ifndef __session__
 #define __session__
 
+#include <unordered_map>
 #include <vector>
 #include "client.h"
 
 class session {
   client connexion;
+  gamestate game;
   std::string username;
+  int tours;
+  std::unordered_map<std::string, int> scores;
  public:
  session(client c, std::string u) :connexion{c}, username{u} {};
   void start();
