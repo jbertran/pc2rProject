@@ -1,19 +1,22 @@
 CC=ocamlc
-LD=str.cma
+LD=str.cma unix.cma threads.cma
 
 all: link
 
 link: interfaces gameState
 	$(CC) -o gameState $(LD) gameState.cmo
 
-test: interfaces gameState test.cmo
+server: server.ml
+	$(CC) -c -thread unix.cma threads.cma server.ml
+
+test: interfaces gameState.cmo server.cm test.cmo
 	$(CC) -o test $(LD) gameState.cmo test.cmo
 
 interfaces: *.mli
 	$(CC) -c $^
 
 %.cmo: %.ml
-	$(CC) -c $<
+	$(CC) -c $< $(LDFLAGS)
 
 gameState: interfaces gameState.ml
 	$(CC) -c gameState.ml
