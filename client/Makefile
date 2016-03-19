@@ -3,9 +3,6 @@ CFLAGS=-std=c++11 -Wall
 
 all: tools client session repr
 
-state: gamestate.cpp gamestate.h
-	$(CC) $(CFLAGS) -c gamestate.cpp 
-
 session: commands.cpp session.cpp
 	$(CC) $(CFLAGS) -c commands.cpp session.cpp
 

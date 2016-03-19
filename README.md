@@ -37,21 +37,38 @@ init_state filepath
 
 ## Client - C++
 
-### client
+Compilation:
 
-Connexion au serveur, envois de messages.
+```sh
+make
+```
 
-### session
+### Classes
 
-Gestion d'une partie ouverte - utilise client pour communiquer avec le serveur.
+* __Client__ : gestion de la connexion au serveur - handshake de début, envoi/réception, terminaison.
+* __Repr__: gestion de la représentation du plateau
+* __Session__: gestion du jeu une fois le client connecté, avec les différentes phases et les écoutes des messages qui concernent le client dans chaque phase. Réaction aux commandes dans commands.cpp, boucle de jeu dans session.cpp.
+	* Possède un client, une repr
 
-### repr
+### Structures
 
-Représentation du jeu. Chaque session contient une repr pour l'énigme fournie par le serveur, et une repr pour représenter les mouvements du joueur.
+* __Coldir__: bête association couleur/direction
+* __Coords__: points 2D.
 
-### TODO
+### Énumérations
+
+* __Incoming__: la liste des commandes que le client peut recevoir du serveur. Toutes traitées dans session.
+* __Status__: OK ou KO, pour ne pas avoir à utiliser des booléens ou des ints.
+* __Phase__: les 4 phases possibles dans la boucle de jeu du client.
+
+### Outils
+
+* Helpers pour la conversion string -> enum pour couleur et direction
+* Helpers pour le parsing des messages serveur - fonction split selon un caractère, fonction de récupération des arguments et de la commande étant donné le message entier reçu par le client en string
+
+## TODO
 
 * Better hostname support in client.cpp
-* Finish repr
+* Meilleur format de fichier d'entrée pour le serveur
 * GUI
 * Test everything

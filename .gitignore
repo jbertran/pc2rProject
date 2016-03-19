@@ -5,6 +5,9 @@
 # cpp
 *.o
 
+# Random stuff
+problem.pdf
+
 # emacs
 *~
 \#*
