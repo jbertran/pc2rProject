@@ -50,13 +50,17 @@ void client::send_message(string message) {
   sock_send(this->sock, message);
 }
 
+string client::recv_message() {
+  return sock_recv(this->sock);
+}
+
 /**
  * Say hello to the server, await ack
  */
 status client::handshake(string user) {
   sock_send(this->sock, "CONNEX/"+user);
   string await = "BIENVENUE/"+user;
-  string reply = *sock_recv(sock);
+  string reply = sock_recv(sock);
   if (await.compare(reply) == 0)
     return status::OK;
   else 
@@ -76,15 +80,15 @@ int main(int argc, char* argv[]) {
   }
   else {
     cout << "Connecting: \n" << "\nNom: " << argv[1] << "Port: " << argv[2] << endl;
-    client inet = client(argv[1], atoi(argv[2]));
+    client* inet = new client(argv[1], atoi(argv[2]));
     string username;
     cout << "Username?" << endl;
     cin >> username;
-    if (inet.handshake(username) == status::OK) {
+    if (inet->handshake(username) == status::OK) {
       session s = session(inet, username);
       s.start();
     }
     else 
-      inet.terminate();
+      inet->terminate();
   }
 }

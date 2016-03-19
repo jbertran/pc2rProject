@@ -1,18 +1,22 @@
 CC=g++
+CFLAGS=-std=c++11 -Wall
 
-all: tools client session
+all: tools client session repr
 
 state: gamestate.cpp gamestate.h
-	$(CC) -std=c++11 -c gamestate.cpp 
+	$(CC) $(CFLAGS) -c gamestate.cpp 
 
 session: commands.cpp session.cpp
-	$(CC) -std=c++11 -c commands.cpp session.cpp
+	$(CC) $(CFLAGS) -c commands.cpp session.cpp
 
-tools: tools.cpp tools.o
-	$(CC) -std=c++11 -c tools.cpp 
+repr: repr.cpp repr.h
+	$(CC) $(CFLAGS) -c repr.cpp 
 
 client: client.cpp client.h
-	$(CC) -std=c++11 -c client.cpp 
+	$(CC) $(CFLAGS) -c client.cpp 
+
+tools: tools.cpp
+	$(CC) $(CFLAGS) -c tools.cpp 
 
 clean:
 	rm -f *.o *~ client

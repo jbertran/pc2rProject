@@ -3,8 +3,10 @@
 
 #include <vector>
 
+#define PLAT_SIZE 16
+
 enum color     { Rouge, Jaune, Vert, Bleu  };
-enum class direction { Haut, Bas, Droite, Gauche };
+enum direction { Haut, Bas, Droite, Gauche };
 
 typedef struct _coord {
   int x;
@@ -16,17 +18,21 @@ typedef struct _coldir {
   direction dir;
 } coldir;
 
+/** ColDir helpers **/
+color stocol(char s);
+direction stodir(char s);
+
 class repr {
 
   int height, width;
   color robot_cible;
   coord cible;
-  std::vector<coord> robots;
-  std::vector<std::vector<std::vector<direction>>> murs;
+  coord robots [4];
+  std::vector<direction>** murs;
 
- public:
+public:
   /** Constructor **/
-  repr(int h, int w) { height = h; width = w; } 
+  repr();
   
   /** Initializer **/
   void initialize();
@@ -35,13 +41,15 @@ class repr {
   coord getCible()   { return cible;  }
   int getHeight()    { return height; }
   int getWidth()     { return width;  }
-  std::vector<coord> getRobots() { return robots; }
-  std::vector<std::vector<std::vector<direction>>> getMurs()  { return murs; }
+  coord* getRobots() { return robots; }
+  std::vector<direction>** getMurs()  { return murs; }
   bool hasWall(int x, int y, direction d);
   bool hasRobot(int x, int y);
   coord getRobot(color c);
 
   /** Operations **/
+  void setRobot(color c, coord co);
+  void setCible(coord co);
   void addWall(int x, int y, direction d);
   coord moveRobot(color c, direction d);
   repr clone();

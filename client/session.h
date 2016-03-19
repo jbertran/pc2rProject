@@ -3,21 +3,23 @@
 
 #include <unordered_map>
 #include <vector>
+#include "repr.h"
 #include "client.h"
 
 class session {
-  client connexion;
-  gamestate game;
-  std::string username;
+  client* connexion;
+  repr* game;
   int tours;
+  std::string username;
   std::unordered_map<std::string, int> scores;
- public:
- session(client c, std::string u) :connexion{c}, username{u} {};
+public:
+  session(client* c, std::string u);
   void start();
-
+  
   /** General messages **/
   void handleConnectMsg(std::vector<std::string> args);
   void handleLeftMsg(std::vector<std::string> args);
+  void handleDiscMsg(std::vector<std::string> args);
 
   /** Idle Phase Messages **/
   void handleWelcomeMsg(std::vector<std::string> args);

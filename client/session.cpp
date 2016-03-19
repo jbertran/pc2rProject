@@ -5,23 +5,34 @@
 
 using namespace std;
 
+session::session(client* c, string user) {
+  connexion = c;
+  username = user;
+  game = new repr();
+  scores = unordered_map<string, int>();
+}
+
 void session::start() {
-  int sock = connexion.getSocket();
   Phase current_ph = Phase::IDLE;
   bool shouldrun = true;
   while (shouldrun) {
-    string msg = *sock_recv(sock);
-    vector<string> args = *getArgs(msg);
+    string msg = connexion->recv_message();
+    vector<string> args = getArgs(msg);
 
     /** General commands **/
-    if (getCmd(msg) == Incoming::CONNECTE) {
+    switch (getCmd(msg)) {
+    case Incoming::CONNECTE:
       handleConnectMsg(args);
-      }
-    else if (getCmd(msg) == Incoming::SORTI) {
+      break;
+    case Incoming::SORTI:
       handleLeftMsg(args);
-    }
-    else {
-      cerr << "Unexpected message received: " << msg << endl;
+      break;
+    case Incoming::DISC:
+      handleDiscMsg(args);
+      shouldrun = false;
+      break;
+    default:
+      break;
     }
 
     /** Phase-dependent commands **/
