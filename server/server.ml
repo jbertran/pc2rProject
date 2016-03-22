@@ -1,5 +1,5 @@
 (*-----------------------------------*)
-(* Ressources *)
+(*------------- Ressources ----------*)
 (*-----------------------------------*)
 
 type joueur = {
@@ -27,9 +27,9 @@ let joueur_liste = ref []
 and nbJoueur = ref 0
 and mutex_joueurL = Mutex.create ()
 
-(*-----------------------------------*)
-(* Traitement des requetes *)
-(*-----------------------------------*)
+(*----------------------------------------*)
+(* Fonctions de manipulation des requetes *)
+(*----------------------------------------*)
 
 let received_request req =
   let splited = Str.split (Str.regexp "/") req in
@@ -42,20 +42,71 @@ let received_request req =
   | "SOLUTION" -> (4, args)
   | _ -> (-1, args)
 
+
+let bilan tours l =
+		let rec create l=
+			match l with
+				[] -> ""
+				| h::t -> "("^h.nom^","^(string_of_int h.score)^")"^(create t)
+		in
+		(string_of_int tours) ^ (create l)
+
 let bienvenue user =
   "BIENVENUE/" ^ user^"/"
 
 let connecte user =
   "CONNECTE/"^user^"/"
 
-let sorti user =
-  "SORTI/" ^user^"/"
-
 let session = 
   "SESSION/"(*^GameState.wall_list*)^"/"
 
 let deconnexion user = 
   "DECONNEXION/" ^user^"/"
+  
+let vainqueur t = 
+  "VAINQUEUR/" ^(bilan t !joueur_liste)^"/"
+
+let tour t =
+	"TOUR/"(*^(GameState.get_state ())*)^"/"^(bilan t !joueur_liste)^"/"
+	
+let tuastrouve () =
+	"TUASTROUVE/"
+
+let ilatrouve user coups =
+	"ILATROUVE/"^user^"/"^(string_of_int coups)
+	
+let finreflexion () =
+	"FINREFLEXION/"
+
+let validation () =
+	"VALIDATION/"
+	
+let echec user =
+	"ECHEC/"^user^"/"
+
+let nouvelEnchere users coups = 
+	"NOUVELLEENCHERE/"^users^"/"^(string_of_int coups)^"/"
+
+let finEnchere users coups = 
+	"FINENCHERE/"^users^"/"^(string_of_int coups)^"/"
+
+let sasolution users deplacements = 
+	"SASOLUTION/"^users^"/"^deplacements^"/"
+
+let bonne  =
+	"BONNE/"
+	
+let mauvaise users =
+	"MAUVAISE/"^users^"/"
+	
+let finreso  =
+	"FINRESO/"
+	
+let troplong users =
+	"TROPLONG/"^users^"/"
+(*--------------------------------------*)
+(* Fonctions de Traitement des requetes *)
+(*--------------------------------------*)
 
 let traitement_connecte player =
   Mutex.lock mutex_joueurL;
@@ -76,15 +127,16 @@ let traitement_sortie player=
       h::t -> if (h.id = player.id) then remove_and_warn t
               else
                 begin
-                  output_string h.outchan (sorti player.nom); 
+                  output_string h.outchan (deconnexion player.nom); 
                   h::(remove_and_warn t)
                 end
     | [] -> []
   in joueur_liste := remove_and_warn !joueur_liste;
-  Mutex.unlock mutex_joueurL;;
+  Mutex.unlock mutex_joueurL;
+  Unix.close player.socket;;
   
 (*-----------------------------------*)
-(* Serveurs Et Threads *)
+(* -------Serveurs Et Threads -------*)
 (*-----------------------------------*)
 
 let creer_serveur max_co = 
