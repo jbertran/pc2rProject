@@ -50,11 +50,17 @@ public:
 protected:
   void paintEvent(QPaintEvent *);
   void resizeEvent(QResizeEvent*);
-
+public slots:
+  void reset();
+  void undo();
+  void addMove(color c, direction d);
 private:
   int cSize;
   void paintWalls(std::vector<direction>** murs, QPainter* p);
   repr* guiRepr;
+  // TODO
+  Robot* robots;
+  std::vector<coldir>* moveList;
 //  session* guiSession;
 };
 
@@ -77,9 +83,10 @@ public:
   void setY(int y) { posY = y; };
 public slots:
   void receiveDir(direction d);
+signals:
+  void doMove(color c, direction d);
 protected:
   void paintEvent(QPaintEvent* qpe);
-  void resizeEvent(QResizeEvent* qre);
   void mousePressEvent(QMouseEvent* qme);
 private:
   QRect* north;

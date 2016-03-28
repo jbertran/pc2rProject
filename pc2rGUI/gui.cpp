@@ -25,6 +25,7 @@ GUI::~GUI()
 PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
   QFrame(parent), 
   guiRepr(new repr())
+  moveList(new vector<coldir>());
   //  guiSession(maSession)
 {
   setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -35,8 +36,6 @@ PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
     coord xy = guiRepr->getRobots()[i];
     robots.push_back(new Robot(this, guiRepr, color(i), xy.x, xy.y));
   }
-  for (Robot* r : robots) 
-    r->move(r->getX(), r->getY());
 }
 
 void PlateauWidget::paintEvent(QPaintEvent *pe) {
@@ -143,6 +142,16 @@ Robot::Robot(QWidget* parent, repr* rep, color col, int x, int y) :
     affC = Qt::blue;
     break;
   }  
+  int pSize = std::min(parentWidget()->size().width(), 
+		  parentWidget()->size().height());
+  int cSize = pSize/NB_CASES;
+  setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);  
+}
+
+QPixmap scPm(char* path, int h, int w) {
+  QPixmap pm(path);
+  QPixmap sc = pm.scaled(h, w);
+  return sc;
 }
 
 void Robot::paintEvent(QPaintEvent* qpe) {
@@ -155,64 +164,51 @@ void Robot::paintEvent(QPaintEvent* qpe) {
   painter->setPen(*pen);
   painter->setBrush(affC);
   QRect center(cSize/3, cSize/3, cSize/3, cSize/3);
+  // For mouseclick checks
   north = new QRect(cSize/3, 0, cSize/3, cSize/3);
   south = new QRect(cSize/3, 2*cSize/3, cSize/3, cSize/3);
   west = new QRect(0, cSize/3, cSize/3, cSize/3);
   east = new QRect(2*cSize/3, cSize/3, cSize/3, cSize/3);
-  // Do this with static images
-  // QRects only here for mouseclick check
-  // Center ellipse
-  painter->drawEllipse(center);
-  // Arrow triangles
-  // North
-  QPainterPath path;
-  path.moveTo(north->left() + (north->width()/2), north->top());
-  path.lineTo(north->bottomLeft());
-  path.lineTo(north->bottomRight());
-  path.lineTo(north->left() + (north->width()/2), north->top());
-  // South
-  path.moveTo(south->left() + (south->width()/2), south->bottom());
-  path.lineTo(south->topLeft());
-  path.lineTo(south->topRight());
-  path.lineTo(south->left() + (south->width()/2), south->bottom());
-  // East
-  path.moveTo(east->top() + (east->height()/2), east->right());
-  path.lineTo(east->topLeft());
-  path.lineTo(east->bottomLeft());
-  path.lineTo(east->top() + (east->height()/2), east->right());
-  // West
-  path.moveTo(west->top() + (west->height()/2), west->left());
-  path.lineTo(west->topRight());
-  path.lineTo(west->bottomRight());
-  path.lineTo(west->top() + (west->height()/2), west->left());
-  painter->fillPath(path, QBrush(affC));
+  // Robot colors
+  switch (c) {
+  case Rouge:
+    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_rouge", cSize, cSize));
+    break;
+  case Jaune:
+    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_jaune", cSize, cSize));
+    break;
+  case Bleu:
+    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_bleu", cSize, cSize));
+    break;
+  case Vert:
+    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_vert", cSize, cSize));
+    break;
+  }painter->end();
   // Position update
-  move(getX()*cSize, getY()*cSize);
-  painter->end();
+  setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);
 }
 
 void Robot::mousePressEvent(QMouseEvent* qme) {
-  if (north.contains(qme->x, qme->y))
-    receiveDir(Haut);
-  if (south.contains(qme->x, qme->y))
-    receiveDir(Bas);
-  if (west.contains(qme->x, qme->y))
-    receiveDir(Gauche);
-  if (east.contains(qme->x, qme->y))
-    receiveDir(Droite);
-}
-
-void Robot::resizeEvent(QResizeEvent* qre) {
-  int pSize = std::min(parentWidget()->size().width(), 
-		       parentWidget()->size().height());
-  int cSize = pSize/NB_CASES;
-  //resize(cSize, cSize);
-  update();
+  std::cout << "clicked!" << std::endl;
+  if (north->contains(qme->x(), qme->y()))
+    receiveDir(direction::Haut);
+  if (south->contains(qme->x(), qme->y()))
+    receiveDir(direction::Bas);
+  if (west->contains(qme->x(), qme->y()))
+    receiveDir(direction::Gauche);
+  if (east->contains(qme->x(), qme->y()))
+    receiveDir(direction::Droite);
 }
 
 void Robot::receiveDir(direction d) {
+  int pSize = std::min(parentWidget()->size().width(), 
+		       parentWidget()->size().height());
+  int cSize = pSize/NB_CASES;
   coord xy = guiRepr->moveRobot(c, d);
+  std::cout << "Mvt to:" << xy.x << "," << xy.y << std::endl;
   setX(xy.x);
   setY(xy.y);
-  //move(getX()*sqSize + sqSize/2, getY()*sqSize + - sqSize/2) ;
+  move(getX()*cSize, getY()*cSize);
+  std::cout << "New pos:" << pos().x() << "," << pos().y() << std::endl;
+  update();
 }
