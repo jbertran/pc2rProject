@@ -2,25 +2,9 @@
 #define __repr__
 
 #include <vector>
+#include "tools.h"
 
 #define PLAT_SIZE 16
-
-enum color     { Rouge, Jaune, Vert, Bleu  };
-enum direction { Haut, Bas, Droite, Gauche };
-
-typedef struct _coord {
-  int x;
-  int y;
-} coord;
-
-typedef struct _coldir {
-  color col;
-  direction dir;
-} coldir;
-
-/** ColDir helpers **/
-color stocol(char s);
-direction stodir(char s);
 
 class repr {
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <string>
 #include "repr.h"
 
 using namespace std;
@@ -9,9 +10,12 @@ repr::repr() {
   vector<direction>** murs = new vector<direction>* [PLAT_SIZE];
   for (int i = 0; i < PLAT_SIZE; i++) {
     murs[i] = new vector<direction> [PLAT_SIZE];
-    for (int j = 0; i < PLAT_SIZE; i++)
+    for (int j = 0; j < PLAT_SIZE; j++)
       (murs[i])[j] = vector<direction>();
   }
+  this->murs = murs;
+  for (int i = 0; i < 4; i++)
+    robots[i] = { i+1, i+1 };
 }
 
 bool repr::hasWall(int x, int y, direction d) {
@@ -30,11 +34,7 @@ bool repr::hasRobot(int x, int y) {
 }
 
 void repr::addWall(int x, int y, direction d) {
-  for (direction md : murs[x][y])
-    if (md == d)
-      return;
-    else
-      murs[x][y].push_back(d);
+  murs[x][y].push_back(d);
 }
 
 coord repr::getRobot(color c) {
@@ -97,36 +97,4 @@ bool repr::is_valid(vector<coldir> movelist) {
   }
   return (tmprobots[robot_cible].x == cible.x && 
 	  tmprobots[robot_cible].y == cible.y);
-}
-
-color stocol(char s) {
-  unordered_map<char, color> stocol =
-    {
-      {'R', color::Rouge},
-      {'J', color::Jaune},
-      {'V', color::Vert},
-      {'B', color::Bleu}
-    };
-  if (stocol.count(s) <= 0) {
-    cerr << "Unknown color!" << endl;
-    return stocol['R'];
-  }
-  else
-    return stocol[s];
-} 
-
-direction stodi(char s) {
-  unordered_map<char, direction> stodir = 
-    {
-      {'H', direction::Haut},
-      {'B', direction::Bas},
-      {'G', direction::Gauche},
-      {'D', direction::Droite}
-    };
-  if (stodir.count(s) <= 0) {
-    cerr << "Unknown direction!" << endl;
-    return stodir['H'];
-  }
-  else
-    return stodir[s];
 }

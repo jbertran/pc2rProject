@@ -13,9 +13,7 @@
 
 using namespace std;
 
-
 /** DATA HELPERS **/
-
 unordered_map<string, Incoming> servermsgs = 
   {
     {"BIENVENUE",    Incoming::WELCOME},
@@ -90,4 +88,69 @@ string sock_recv(int sock) {
   }
   else
     return string(buff);
+}
+
+/** ENUMS **/
+color stocol(char s) {
+  unordered_map<char, color> stocol =
+    {
+      {'R', color::Rouge},
+      {'J', color::Jaune},
+      {'V', color::Vert},
+      {'B', color::Bleu}
+    };
+  if (stocol.count(s) <= 0) {
+    cerr << "Unknown color!" << endl;
+    return stocol['R'];
+  }
+  else
+    return stocol[s];
+} 
+
+direction stodir(char s) {
+  unordered_map<char, direction> stodir = 
+    {
+      {'H', direction::Haut},
+      {'B', direction::Bas},
+      {'G', direction::Gauche},
+      {'D', direction::Droite}
+    };
+  if (stodir.count(s) <= 0) {
+    cerr << "Unknown direction!" << endl;
+    return stodir['H'];
+  }
+  else
+    return stodir[s];
+}
+
+char coltos(color c) {
+  switch (c) {
+  case color::Rouge:
+    return 'R';
+  case color::Jaune:
+    return 'J';
+  case color::Vert:
+    return 'V';
+  case color::Bleu:
+    return 'B';
+  default:
+    cerr << "Unknown color!" << endl;
+    return color::Rouge;
+  }
+} 
+
+char dirtos(direction d) {
+  switch (d) {
+  case direction::Haut:
+    return 'H';
+  case direction::Bas:
+    return 'B';
+  case direction::Gauche:
+    return 'G';
+  case direction::Droite:
+    return 'D';
+  default:
+    cerr << "Unknown direction!" << endl;
+    return direction::Haut;
+  }
 }
