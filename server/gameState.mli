@@ -7,6 +7,7 @@ val make_color : string -> color
 
 (* Initialisation de l'état *)
 val init_state : string -> unit
+val new_puzzle : unit -> unit
 
 (* Récupération de la liste de murs *) 
 val wall_list : unit -> string

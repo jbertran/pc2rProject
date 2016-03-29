@@ -60,7 +60,6 @@ let read_walls_file filepath =
     let h::w::[] = List.map int_of_string (split (regexp "[ \t]+") !line) in
     line := input_line reader;
     while (not (string_match (regexp "-1 -1") !line 0)); do
-      print_string "lol\n";
       let sp1::sp2::sp3::[] = split (regexp " ") !line in
       let d = make_dir sp3 in
       wall_list := ((int_of_string sp1), (int_of_string sp2), d)::(!wall_list);
@@ -80,6 +79,7 @@ let rec present (a, b) l =
     (x, y)::t -> if a == x && b == y then true else present (a, b) t
   | [] -> false
 
+(* Initialiser les robots au hasard *)
 let init_pos array size plist = 
   for i=0 to (size - 1) do
     let rec get_rnd () = 
@@ -142,7 +142,7 @@ let init_state confFile =
 
 let rec print_walls strp x y l =
   let append strp c = 
-    strp := !strp ^ "(" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ "," ^ c ^ ")"                                                                                    
+    strp := !strp ^ "(" ^ (string_of_int x) ^ "," ^ (string_of_int y) ^ "," ^ c ^ ")"
   in
   match l with
     h::t -> 
@@ -251,6 +251,26 @@ let set_robot gs pos col =
   | C_B -> gs.robots.(0) <- (x, y)
   | C_J -> gs.robots.(0) <- (x, y)
   | C_V -> gs.robots.(0) <- (x, y)
+;;
+
+let new_target () =
+  let targetList = [(0, 0), (15, 0), (0, 15), (15, 15)] in
+  let pos = Random.int 4 in
+  (List.nth targetList pos)
+;;
+
+(* Initialiser robots, robot cible et cible au hasard *)
+let new_puzzle () =
+  let cnum = Random.int 4 in
+  let color = match cnum with
+      0 -> C_R
+    | 1 -> C_J
+    | 2 -> C_V
+    | 3 -> C_B
+  in
+  game_state.robot_cible = color;
+  init_pos empty_state.robots 4 [];
+  game_state.cible = new_target ()
 ;;
 
 
