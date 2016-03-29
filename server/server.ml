@@ -164,7 +164,7 @@ and end_reso _ =
 		let ite (playeur:joueur) = output_string playeur.outchan (troplong next.username); flush playeur.outchan in
 			List.iter ite !joueur_liste;
 			ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle end_reso));
-			ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =60.0})
+			ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =1.0})
 	end;
 	
 	Mutex.unlock mutex_phase;
@@ -180,7 +180,7 @@ and begin_reso _ =
 		output_string ench.outchan (finEnchere first.username first.cout); flush ench.outchan in
 	List.iter ite !liste_enchere;
 	ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle end_reso));
-	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =60.0});
+	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =1.0});
 	
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
@@ -189,7 +189,7 @@ and begin_reso _ =
 and begin_enchere () =
 	phase := 2;
 	ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle begin_reso));
-	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =30.0})
+	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =10.0})
 
 
 and timeout_reflexion _ =
@@ -214,7 +214,7 @@ and begin_reflexion () =
 	let ite enche = output_string enche.outchan (tour !tourNum); flush enche.outchan in
 	List.iter ite !liste_enchere;
 	
-	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 300.0});
+	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 10.0});
 	
 	
 
@@ -230,7 +230,7 @@ and debut_session () =
 	let func (play:joueur) = output_string play.outchan (session()); flush play.outchan in
 		List.iter func !joueur_liste;
 		ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle lock_reflexion));
-		ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 30.0 })
+		ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 10.0 })
 ;;
 (*--------------------------------------*)
 (* Fonctions de Traitement des requetes *)
