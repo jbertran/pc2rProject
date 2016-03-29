@@ -142,7 +142,7 @@ let rec fin_session () =
 		phase := 0;
 		tourNum := 0
 	end;
-	let ite (playeur:joueur) = output_string playeur.outchan (vainqueur !tourNum) in
+	let ite (playeur:joueur) = output_string playeur.outchan (vainqueur !tourNum); flush playeur.outchan in
 	List.iter ite !joueur_liste;
 	if !nbJoueur > 1 then
 		debut_session()
@@ -156,12 +156,12 @@ and end_reso _ =
 	liste_enchere := List.tl !liste_enchere;
 	
 	if (List.length !liste_enchere) =0 then begin
-		let ite (playeur:joueur) = output_string playeur.outchan (finreso()) in
+		let ite (playeur:joueur) = output_string playeur.outchan (finreso()); flush playeur.outchan in
 			List.iter ite !joueur_liste;
 			debut_session ()
 	end else begin
 		let next = (List.hd !liste_enchere) in
-		let ite (playeur:joueur) = output_string playeur.outchan (troplong next.username) in
+		let ite (playeur:joueur) = output_string playeur.outchan (troplong next.username); flush playeur.outchan in
 			List.iter ite !joueur_liste;
 			ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle end_reso));
 			ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =60.0})
@@ -177,7 +177,7 @@ and begin_reso _ =
 	
 	let ite ench = 
 		let first = (List.hd !liste_enchere) in
-		output_string ench.outchan (finEnchere first.username first.cout) in
+		output_string ench.outchan (finEnchere first.username first.cout); flush ench.outchan in
 	List.iter ite !liste_enchere;
 	ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle end_reso));
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =60.0});
@@ -198,7 +198,7 @@ and timeout_reflexion _ =
 	if !phase = 1 then
 		begin_enchere()
 	else ();
-	let timeout ench = output_string ench.outchan (finreflexion ()) in
+	let timeout ench = output_string ench.outchan (finreflexion ()); flush ench.outchan in
 	List.iter timeout !liste_enchere;
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
@@ -214,7 +214,7 @@ and begin_reflexion _ =
 	liste_enchere :=List.map playToEnch !joueur_liste;
 	
 	ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle timeout_reflexion));
-	let ite enche = output_string enche.outchan (tour !tourNum) in
+	let ite enche = output_string enche.outchan (tour !tourNum); flush enche.outchan in
 	List.iter ite !liste_enchere;
 	
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 300.0});
@@ -224,7 +224,7 @@ and begin_reflexion _ =
 
 and debut_session () =
 	GameState.init_state "./conf/basegame.conf";
-	let func (play:joueur) = output_string play.outchan (session()) in
+	let func (play:joueur) = output_string play.outchan (session()); flush play.outchan in
 		List.iter func !joueur_liste;
 		ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle begin_reflexion));
 		ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 30.0 })
@@ -238,16 +238,22 @@ let traitement_connecte (player:joueur) =
   incr nbJoueur;
   let rec hello (l:joueur list) =
     match l with
-      h :: t -> output_string h.outchan (connecte player.nom);
+      h :: t ->begin output_string h.outchan (connecte player.nom);
+      			flush h.outchan;
       			h::(hello t)
-    | [] -> output_string player.outchan (bienvenue player.nom);
+      			end
+    | [] -> begin output_string player.outchan (bienvenue player.nom);
+    			flush player.outchan;
     		player::[]
+    		end
   in joueur_liste := hello !joueur_liste;
   	 Mutex.lock mutex_phase;
   	 if !nbJoueur = 2 && !phase = 0 then
   	 	debut_session()
-  	 else
+  	 else begin
   	 	output_string player.outchan (session ());
+  	 	flush player.outchan
+  	 end;
   	 Mutex.unlock mutex_phase;
      Mutex.unlock mutex_joueurL;;
 
@@ -259,7 +265,8 @@ let traitement_sortie (player:joueur)=
       h::t -> if (h.id = player.id) then remove_and_warn t
               else
                 begin
-                  output_string h.outchan (deconnexion player.nom); 
+                  output_string h.outchan (deconnexion player.nom);
+                  flush h.outchan;
                   h::(remove_and_warn t)
                 end
     | [] -> []
@@ -283,9 +290,13 @@ let traitement_enchere player args =
       begin
         let rec cost = int_of_string(List.nth args 1)
         and com_ench ench=
-          if ench.id = player.id then
-            output_string ench.outchan (tuastrouve())
-          else output_string ench.outchan (ilatrouve player.nom cost)
+          if ench.id = player.id then begin
+            output_string ench.outchan (tuastrouve());
+            flush ench.outchan;
+            end
+          else begin output_string ench.outchan (ilatrouve player.nom cost);
+          			flush ench.outchan
+          		end
         in
         let rec remove l =
           match l with
@@ -299,6 +310,7 @@ let traitement_enchere player args =
             [] ->
               begin
                 output_string player.outchan "ERREUR: Vous ne participez pas au tour";
+                flush player.outchan;
                 []
               end
           | h::t ->
@@ -314,6 +326,7 @@ let traitement_enchere player args =
                  if h.id = player.id then
                    begin
                      output_string player.outchan (echec h.username);
+                     flush player.outchan;
                      h::t
                    end
                  else
@@ -322,6 +335,7 @@ let traitement_enchere player args =
                  if h.cout = cost then
                    begin
                      output_string player.outchan (echec h.username);
+                     flush player.outchan;
                      h::t
                    end
                  else begin
@@ -333,10 +347,14 @@ let traitement_enchere player args =
         in
         liste_enchere :=replace !liste_enchere
       end
-    else
-      output_string player.outchan "REQUETE INVALIDE: Vous ne jouez pas ce tour"
-  else
+    else begin
+      output_string player.outchan "REQUETE INVALIDE: Vous ne jouez pas ce tour";
+      flush player.outchan
+      end
+  else begin
     output_string player.outchan "REQUETE INVALIDE: Pas en phase d'enchere";
+    flush player.outchan
+    end;
   Mutex.unlock mutex_phase
 ;;
 
