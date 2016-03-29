@@ -56,6 +56,7 @@ and scoreMax = 3
 
 let received_request req =
   let splited = Str.split (Str.regexp "/") req in
+  if (List.length splited) > 0 then
   let intitule = List.hd splited
   and args = List.tl splited in
   match intitule with
@@ -64,6 +65,8 @@ let received_request req =
   | "ENCHERE" -> (3, args)
   | "SOLUTION" -> (4, args)
   | _ -> (-1, args)
+ else
+ 	(-1, [])
 
 
 let bilan tours l =
