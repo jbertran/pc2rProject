@@ -158,7 +158,7 @@ and end_reso _ =
 	if (List.length !liste_enchere) =0 then begin
 		let ite (playeur:joueur) = output_string playeur.outchan (finreso()); flush playeur.outchan in
 			List.iter ite !joueur_liste;
-			debut_session ()
+			begin_reflexion ()
 	end else begin
 		let next = (List.hd !liste_enchere) in
 		let ite (playeur:joueur) = output_string playeur.outchan (troplong next.username); flush playeur.outchan in
@@ -203,10 +203,7 @@ and timeout_reflexion _ =
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
-and begin_reflexion _ = 
-	Mutex.lock mutex_joueurL;
-	Mutex.lock mutex_phase;
-	
+and begin_reflexion () = 
 	incr tourNum;
 	GameState.new_puzzle ();
 	phase := 1;
@@ -219,6 +216,12 @@ and begin_reflexion _ =
 	
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 300.0});
 	
+	
+
+and lock_reflexion _ = 
+	Mutex.lock mutex_joueurL;
+	Mutex.lock mutex_phase;
+	begin_reflexion ();
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
@@ -226,7 +229,7 @@ and debut_session () =
 	GameState.init_state "./conf/basegame.conf";
 	let func (play:joueur) = output_string play.outchan (session()); flush play.outchan in
 		List.iter func !joueur_liste;
-		ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle begin_reflexion));
+		ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle lock_reflexion));
 		ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 30.0 })
 ;;
 (*--------------------------------------*)
