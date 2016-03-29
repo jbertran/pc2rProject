@@ -78,58 +78,58 @@ let bilan tours l =
 		(string_of_int tours) ^ (create l)
 
 let bienvenue user =
-  "BIENVENUE/" ^ user^"/"
+  "BIENVENUE/" ^ user^"/\n"
 
 let connecte user =
-  "CONNECTE/"^user^"/"
+  "CONNECTE/"^user^"/\n"
 
 let session ()= 
-  "SESSION/"^(GameState.wall_list())^"/"
+  "SESSION/"^(GameState.wall_list())^"/\n"
 
 let deconnexion user = 
-  "DECONNEXION/" ^user^"/"
+  "DECONNEXION/" ^user^"/\n"
   
 let vainqueur t = 
-  "VAINQUEUR/" ^(bilan t !joueur_liste)^"/"
+  "VAINQUEUR/" ^(bilan t !joueur_liste)^"/\n"
 
 let tour t =
-	"TOUR/"^(GameState.get_state ())^"/"^(bilan t !joueur_liste)^"/"
+	"TOUR/"^(GameState.get_state ())^"/"^(bilan t !joueur_liste)^"/\n"
 	
 let tuastrouve () =
-	"TUASTROUVE/"
+	"TUASTROUVE/\n"
 
 let ilatrouve user coups =
-	"ILATROUVE/"^user^"/"^(string_of_int coups)
+	"ILATROUVE/"^user^"/"^(string_of_int coups)^"/\n"
 	
 let finreflexion () =
-	"FINREFLEXION/"
+	"FINREFLEXION/\n"
 
 let validation () =
-	"VALIDATION/"
+	"VALIDATION/\n"
 	
 let echec user =
-	"ECHEC/"^user^"/"
+	"ECHEC/"^user^"/\n"
 
 let nouvelEnchere users coups = 
-	"NOUVELLEENCHERE/"^users^"/"^(string_of_int coups)^"/"
+	"NOUVELLEENCHERE/"^users^"/"^(string_of_int coups)^"/\n"
 
 let finEnchere users coups = 
-	"FINENCHERE/"^users^"/"^(string_of_int coups)^"/"
+	"FINENCHERE/"^users^"/"^(string_of_int coups)^"/\n"
 
 let sasolution users deplacements = 
-	"SASOLUTION/"^users^"/"^deplacements^"/"
+	"SASOLUTION/"^users^"/"^deplacements^"/\n"
 
 let bonne () =
-	"BONNE/"
+	"BONNE/\n"
 	
 let mauvaise users =
-	"MAUVAISE/"^users^"/"
+	"MAUVAISE/"^users^"/\n"
 	
 let finreso () =
-	"FINRESO/"
+	"FINRESO/\n"
 	
 let troplong users =
-	"TROPLONG/"^users^"/"
+	"TROPLONG/"^users^"/\n"
 	
 (*-----------------------------------*)
 (*Fonctions de gestions de la session*)
@@ -310,7 +310,7 @@ let traitement_enchere player args =
           match l with
             [] ->
               begin
-                output_string player.outchan "ERREUR: Vous ne participez pas au tour";
+                output_string player.outchan "ERREUR: Vous ne participez pas au tour\n";
                 flush player.outchan;
                 []
               end
@@ -349,11 +349,11 @@ let traitement_enchere player args =
         liste_enchere :=replace !liste_enchere
       end
     else begin
-      output_string player.outchan "REQUETE INVALIDE: Vous ne jouez pas ce tour";
+      output_string player.outchan "REQUETE INVALIDE: Vous ne jouez pas ce tour\n";
       flush player.outchan
       end
   else begin
-    output_string player.outchan "REQUETE INVALIDE: Pas en phase d'enchere";
+    output_string player.outchan "REQUETE INVALIDE: Pas en phase d'enchere\n";
     flush player.outchan
     end;
   Mutex.unlock mutex_phase
@@ -375,11 +375,13 @@ let creer_serveur max_co =
   sock;;
 
 let serveur_process sock service=
-	Unix.signal Sys.sigalrm Sys.Signal_ignore;
+	Sys.signal Sys.sigalrm Sys.Signal_ignore;
   while true do
+	try
     let(s, caller) = Unix.accept sock
     in
     ignore(Thread.create service s)
+    with _ ->()
   done;;
 
 let boucle_joueur player =
@@ -393,7 +395,7 @@ let boucle_joueur player =
       | 4 -> traitement_solution player args
       | _ ->
          begin 
-           output_string player.outchan ("REQUETE INVALIDE : "^line);
+           output_string player.outchan ("REQUETE INVALIDE : "^line^"\n");
            flush player.outchan
          end
     done;
@@ -410,7 +412,7 @@ let joueur_service sock=
     boucle_joueur player
   else
     begin 
-      output_string outchan "REQUETE INVALIDE: attente d'une requete de la forme: CONNEXION/username"; 
+      output_string outchan "REQUETE INVALIDE: attente d'une requete de la forme: CONNEXION/username\n"; 
   flush outchan
     end
 
