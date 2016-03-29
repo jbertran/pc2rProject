@@ -375,6 +375,7 @@ let creer_serveur max_co =
   sock;;
 
 let serveur_process sock service=
+	Unix.signal Sys.sigalrm Sys.Signal_ignore;
   while true do
     let(s, caller) = Unix.accept sock
     in
