@@ -3,8 +3,8 @@ LD=-thread str.cma unix.cma threads.cma
 
 all: link
 
-link: interfaces gameState
-	$(CC) -o gameState $(LD) gameState.cmo
+link: interfaces gameState server
+	$(CC) -o server $(LD) gameState.cmo server.cmo
 
 server: server.ml gameState
 	$(CC) -c -thread threads.cma unix.cma list.cma sys.cma server.ml

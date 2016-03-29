@@ -254,7 +254,7 @@ let set_robot gs pos col =
 ;;
 
 let new_target () =
-  let targetList = [(0, 0), (15, 0), (0, 15), (15, 15)] in
+  let targetList = [(0, 0); (15, 0); (0, 15); (15, 15)] in
   let pos = Random.int 4 in
   (List.nth targetList pos)
 ;;
@@ -268,9 +268,10 @@ let new_puzzle () =
     | 2 -> C_V
     | 3 -> C_B
   in
-  game_state.robot_cible = color;
-  init_pos empty_state.robots 4 [];
-  game_state.cible = new_target ()
+  game_state.robot_cible <- color;
+  let pl = ref [] in
+  init_pos game_state.robots 4 pl;
+  game_state.cible <- (new_target ())
 ;;
 
 
