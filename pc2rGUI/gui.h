@@ -16,6 +16,7 @@
 #include <QColor>
 #include <QRect>
 #include <QPen>
+#include <QLabel>
 #include <iostream>
 
 namespace Ui {
@@ -58,6 +59,9 @@ public slots:
   void valider();
   void addMove(s_move m);
 signals:
+  void counterIncr();
+  void counterDecr();
+  void counterReset();
   void resetRobot(color c);
   void undoMove(color c, coord xy);
 private:
@@ -105,6 +109,26 @@ private:
   color c;
   int posX, posY;
   coord origin;
+};
+
+/**
+ * QLabel de gestion du score.
+ * Slots reset(), incr(), decr().
+ */
+
+class CoupsLabel : public QLabel
+{
+
+  Q_OBJECT
+
+ public:
+  explicit CoupsLabel(QString text, QWidget* parent);
+ public slots:
+  void reset();
+  void incr();
+  void decr();
+ signals:
+  void value(int val);
 };
 
 #endif // GUI_H

@@ -143,6 +143,7 @@ void PlateauWidget::undo() {
       emit resetRobot(m.col);
     else
       emit undoMove(m.col, m.depart);
+    emit counterDecr();
     moveList->pop_front();
   }
 }
@@ -154,6 +155,7 @@ void PlateauWidget::reset() {
   emit resetRobot(color::Jaune);
   emit resetRobot(color::Vert);
   emit resetRobot(color::Bleu);
+  emit counterReset();
 }
 
 void PlateauWidget::valider() {
@@ -166,6 +168,7 @@ void PlateauWidget::valider() {
 
 void PlateauWidget::addMove(s_move m) {
   moveList->push_front(m);
+  emit counterIncr();
 }
 
 /**
@@ -200,6 +203,7 @@ void Robot::reset(color col) {
     int cSize = pSize/NB_CASES;
     setX(origin.x);
     setY(origin.y);
+    guiRepr->setRobot(c, origin);
     setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);  
   }
 }
@@ -280,4 +284,21 @@ void Robot::moveRobot(color col, coord xy) {
     guiRepr->setRobot(c, xy);
     setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);
   }
+}
+
+CoupsLabel::CoupsLabel(QString text, QWidget* parent) :
+  QLabel(text, parent)
+{
+}
+
+void CoupsLabel::reset() {
+  setText(QString::number(0));
+}
+
+void CoupsLabel::incr() {
+  setText(QString::number(text().toInt() + 1));
+}
+
+void CoupsLabel::decr() {
+  setText(QString::number(text().toInt() - 1));
 }
