@@ -17,11 +17,14 @@ int main(int argc, char *argv[])
     QLayout* sidePanel = new QVBoxLayout;
     mainLayout->addItem(sidePanel);
 
-    // Boutons reset et undo
+    // Boutons reset, undo, valider
     QPushButton* undo = new QPushButton("Annuler");
     QPushButton* reset = new QPushButton("Tout annuler");
+    QPushButton* valid = new QPushButton("Valider");
+    QObject::connect(valid, SIGNAL(clicked()), p, SLOT(valider()));
     QObject::connect(undo, SIGNAL(clicked()), p, SLOT(undo()));
     QObject::connect(reset, SIGNAL(clicked()), p, SLOT(reset()));
+    sidePanel->addWidget(valid);
     sidePanel->addWidget(undo);
     sidePanel->addWidget(reset);
     

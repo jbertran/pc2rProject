@@ -23,6 +23,8 @@ repr::repr() {
   }
   for (int i = 0; i < 4; i++)
     robots[i] = { i+1, i+1 };
+  robot_cible = color::Rouge;
+  cible={0,0};
 }
 
 bool repr::hasWall(int x, int y, direction d) {

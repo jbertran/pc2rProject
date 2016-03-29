@@ -8,6 +8,8 @@
 
 class repr {
 
+ private:
+  
   int height, width;
   color robot_cible;
   coord cible;
@@ -23,6 +25,7 @@ public:
 
   /**   Getters  **/
   coord getCible()   { return cible;  }
+  color getRobotCible() { return robot_cible; }
   int getHeight()    { return height; }
   int getWidth()     { return width;  }
   coord* getRobots() { return robots; }

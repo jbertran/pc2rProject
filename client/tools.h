@@ -18,6 +18,12 @@ typedef struct _coldir {
   direction dir;
 } coldir;
 
+typedef struct _move {
+  color col;
+  direction dir;
+  coord depart;
+} s_move;
+
 /** UTILS **/
 std::vector<std::string> split(std::string msg, char delim);
 std::vector<std::string> getArgs(std::string msg);

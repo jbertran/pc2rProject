@@ -31,6 +31,9 @@ void session::start() {
       handleDiscMsg(args);
       shouldrun = false;
       break;
+    case Incoming::VAINQ:
+      handleWinnerMsg(args);
+      break;
     default:
       break;
     }
@@ -49,9 +52,6 @@ void session::start() {
 	current_ph = Phase::THINK;
 	handleTurnMsg(args);
 	break;
-      case Incoming::VAINQ:
-	handleWinnerMsg(args);
-	return;
       default:
 	break;
       }
