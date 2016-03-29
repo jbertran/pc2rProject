@@ -83,26 +83,38 @@ static const uint qt_meta_data_PlateauWidget[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       0,    0, // methods
+       3,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
        0,       // signalCount
 
+ // slots: signature, parameters, type, tag, flags
+      15,   14,   14,   14, 0x0a,
+      23,   14,   14,   14, 0x0a,
+      34,   30,   14,   14, 0x0a,
+
        0        // eod
 };
 
 static const char qt_meta_stringdata_PlateauWidget[] = {
-    "PlateauWidget\0"
+    "PlateauWidget\0\0reset()\0undo()\0c,d\0"
+    "addMove(color,direction)\0"
 };
 
 void PlateauWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
-    Q_UNUSED(_o);
-    Q_UNUSED(_id);
-    Q_UNUSED(_c);
-    Q_UNUSED(_a);
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        Q_ASSERT(staticMetaObject.cast(_o));
+        PlateauWidget *_t = static_cast<PlateauWidget *>(_o);
+        switch (_id) {
+        case 0: _t->reset(); break;
+        case 1: _t->undo(); break;
+        case 2: _t->addMove((*reinterpret_cast< color(*)>(_a[1])),(*reinterpret_cast< direction(*)>(_a[2]))); break;
+        default: ;
+        }
+    }
 }
 
 const QMetaObjectExtraData PlateauWidget::staticMetaObjectExtraData = {
@@ -136,6 +148,11 @@ int PlateauWidget::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     _id = QFrame::qt_metacall(_c, _id, _a);
     if (_id < 0)
         return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 3)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 3;
+    }
     return _id;
 }
 static const uint qt_meta_data_Robot[] = {

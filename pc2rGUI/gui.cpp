@@ -24,8 +24,8 @@ GUI::~GUI()
 
 PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
   QFrame(parent), 
-  guiRepr(new repr())
-  moveList(new vector<coldir>());
+  guiRepr(new repr()),
+  moveList(new std::list<coldir>())
   //  guiSession(maSession)
 {
   setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -116,6 +116,21 @@ void PlateauWidget::resizeEvent(QResizeEvent *qre) {
   update();
 }
 
+void PlateauWidget::undo() {
+  coldir cd = moveList->front();
+  if (!(moveList->empty()))
+    moveList->pop_front();
+}
+
+void PlateauWidget::reset() {
+  while (!(moveList->empty()))
+    moveList->pop_front();
+}
+
+void PlateauWidget::addMove(color c, direction d) {
+  moveList->push_front({c, d});
+}
+
 /**
  * QPushButton Robot: représente un robot dans le jeu
  * Permet de track les positions et les mouvements
@@ -128,20 +143,6 @@ Robot::Robot(QWidget* parent, repr* rep, color col, int x, int y) :
   posX(x),
   posY(y)
 {
-  switch (col) {
-  case Rouge:
-    affC = Qt::red;
-    break;
-  case Jaune:
-    affC = Qt::yellow;
-    break;
-  case Vert:
-    affC = Qt::green;
-    break;
-  case Bleu:
-    affC = Qt::blue;
-    break;
-  }  
   int pSize = std::min(parentWidget()->size().width(), 
 		  parentWidget()->size().height());
   int cSize = pSize/NB_CASES;
@@ -162,7 +163,6 @@ void Robot::paintEvent(QPaintEvent* qpe) {
   QPen * pen = new QPen;
   pen->setWidth(1);
   painter->setPen(*pen);
-  painter->setBrush(affC);
   QRect center(cSize/3, cSize/3, cSize/3, cSize/3);
   // For mouseclick checks
   north = new QRect(cSize/3, 0, cSize/3, cSize/3);
@@ -172,16 +172,16 @@ void Robot::paintEvent(QPaintEvent* qpe) {
   // Robot colors
   switch (c) {
   case Rouge:
-    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_rouge", cSize, cSize));
+    painter->drawPixmap(0, 0, scPm("../assets/r_rouge", cSize, cSize));
     break;
   case Jaune:
-    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_jaune", cSize, cSize));
+    painter->drawPixmap(0, 0, scPm("../assets/r_jaune", cSize, cSize));
     break;
   case Bleu:
-    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_bleu", cSize, cSize));
+    painter->drawPixmap(0, 0, scPm("../assets/r_bleu", cSize, cSize));
     break;
   case Vert:
-    painter->drawPixmap(WALL_W, WALL_W, scPm("../assets/r_vert", cSize, cSize));
+    painter->drawPixmap(0, 0, scPm("../assets/r_vert", cSize, cSize));
     break;
   }painter->end();
   // Position update
@@ -208,7 +208,9 @@ void Robot::receiveDir(direction d) {
   std::cout << "Mvt to:" << xy.x << "," << xy.y << std::endl;
   setX(xy.x);
   setY(xy.y);
+  guiRepr->setRobot(c, xy);
   move(getX()*cSize, getY()*cSize);
   std::cout << "New pos:" << pos().x() << "," << pos().y() << std::endl;
+  emit(SIGNAL(robotMoved(c, d)));
   update();
 }

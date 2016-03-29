@@ -39,6 +39,8 @@ private:
  *          cases, et sur lequel on place les robots.
  * Méthode draw importante.
  */
+class Robot;
+
 class PlateauWidget : public QFrame
 {
 
@@ -60,7 +62,7 @@ private:
   repr* guiRepr;
   // TODO
   Robot* robots;
-  std::vector<coldir>* moveList;
+  std::list<coldir>* moveList;
 //  session* guiSession;
 };
 
@@ -84,7 +86,7 @@ public:
 public slots:
   void receiveDir(direction d);
 signals:
-  void doMove(color c, direction d);
+  // void robotMoved(color c, direction d);
 protected:
   void paintEvent(QPaintEvent* qpe);
   void mousePressEvent(QMouseEvent* qme);
@@ -95,7 +97,6 @@ private:
   QRect* west;
   repr* guiRepr;
   color c;
-  QColor affC;
   int posX, posY;
 };
 
