@@ -250,10 +250,11 @@ let traitement_connecte (player:joueur) =
   	 Mutex.lock mutex_phase;
   	 if !nbJoueur = 2 && !phase = 0 then
   	 	debut_session()
-  	 else begin
-  	 	output_string player.outchan (session ());
-  	 	flush player.outchan
-  	 end;
+  	 else 
+  	 	if !nbJoueur > 2 then begin
+  	 		output_string player.outchan (session ());
+  	 		flush player.outchan
+  	 	end else ();
   	 Mutex.unlock mutex_phase;
      Mutex.unlock mutex_joueurL;;
 
