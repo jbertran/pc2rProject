@@ -313,6 +313,16 @@ let traitement_sortie (player:joueur)=
     | [] -> []
   in joueur_liste := remove_and_warn !joueur_liste;
   Mutex.lock mutex_phase;
+  
+  let rec removeFromEnchere enchL =
+  	match enchL with
+  	 [] -> []
+  	|h::t -> if h.id = player.id then
+  				t
+  			else
+  				(h::(removeFromEnchere t)) in
+  liste_enchere := removeFromEnchere !liste_enchere;
+  
   Unix.close player.socket;
   if !nbJoueur < 2 then
   	fin_session()
