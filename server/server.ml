@@ -68,6 +68,28 @@ let received_request req =
  else
  	(-1, [])
 
+let isMoveList str =
+	let r = Str.regexp "([RBJV][HBGD])*" in
+		Str.string_match r str 0
+
+let rec movement_of_string_rec str =
+	if (String.length str) = 0 then
+		[]
+	else
+		let first = String.sub str 0 1
+		and second = String.sub str 1 1 in
+		((GameState.make_color first),(GameState.make_dir second))::(movement_of_string_rec (String.sub str 2 (String.length str - 2)))
+
+let movement_of_string (str:string) =
+	if isMoveList str then begin
+		print_endline "REUSSI";
+		movement_of_string_rec str
+	end
+	else
+	begin
+		print_endline ("RATE : "^str);
+		[]
+	end
 
 let bilan tours l =
 		let rec create l=
@@ -135,6 +157,8 @@ let troplong users =
 (*Fonctions de gestions de la session*)
 (*-----------------------------------*)
 let rec fin_session () =
+	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval =0.0; it_value =0.0});
+	ignore(Sys.signal Sys.sigalrm Sys.Signal_default);
 	if !phase = 0 then
 		()
 	else begin
@@ -195,11 +219,11 @@ and begin_enchere () =
 and timeout_reflexion _ =
 	Mutex.lock mutex_joueurL;
 	Mutex.lock mutex_phase;
-	if !phase = 1 then
+	if !phase = 1 then begin
+		let timeout ench = output_string ench.outchan (finreflexion ()); flush ench.outchan in
+		List.iter timeout !liste_enchere;
 		begin_enchere()
-	else ();
-	let timeout ench = output_string ench.outchan (finreflexion ()); flush ench.outchan in
-	List.iter timeout !liste_enchere;
+	end else ();
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
@@ -275,11 +299,8 @@ let traitement_sortie (player:joueur)=
                 end
     | [] -> []
   in joueur_liste := remove_and_warn !joueur_liste;
-  Mutex.unlock mutex_joueurL;
-  Unix.close player.socket;
-  
-  Mutex.lock mutex_joueurL;
   Mutex.lock mutex_phase;
+  Unix.close player.socket;
   if !nbJoueur < 2 then
   	fin_session()
   else 
@@ -295,10 +316,10 @@ let traitement_enchere player args =
         let rec cost = int_of_string(List.nth args 1)
         and com_ench ench=
           if ench.id = player.id then begin
-            output_string ench.outchan (tuastrouve());
+            output_string ench.outchan (validation());
             flush ench.outchan;
             end
-          else begin output_string ench.outchan (ilatrouve player.nom cost);
+          else begin output_string ench.outchan (nouvelEnchere player.nom cost);
           			flush ench.outchan
           		end
         in
@@ -308,7 +329,7 @@ let traitement_enchere player args =
           |h::t -> if h.id = player.id then
               t
             else
-              h::(remove t)
+              (h::(remove t))
         and replace (l:enchere list) =
           match l with
             [] ->
@@ -323,7 +344,7 @@ let traitement_enchere player args =
                and newListe = remove (h::t) in
                begin
                  List.iter com_ench !liste_enchere;
-                 newEnchere::newListe
+                 (newEnchere::newListe)
                end
              else
                if h.cout < cost then
@@ -331,22 +352,22 @@ let traitement_enchere player args =
                    begin
                      output_string player.outchan (echec h.username);
                      flush player.outchan;
-                     h::t
+                     (h::t)
                    end
                  else
-                   replace t
+                   (h::(replace t))
                else
                  if h.cout = cost then
                    begin
                      output_string player.outchan (echec h.username);
                      flush player.outchan;
-                     h::t
+                     (h::t)
                    end
                  else begin
                    let newEnchere = { username = player.nom; id = player.id; cout = cost; outchan = player.outchan}
                    and newListe = remove (h::t) in
                    List.iter com_ench !liste_enchere;
-                   newEnchere::newListe
+                   (newEnchere::newListe)
                  end
         in
         liste_enchere :=replace !liste_enchere
@@ -362,7 +383,82 @@ let traitement_enchere player args =
   Mutex.unlock mutex_phase
 ;;
 
-let traitement_solution player args = ()
+let traitement_solution_reflexion (player:joueur) args = 
+	let coups =try  int_of_string (List.nth args 1) with _ -> -1 in
+	if coups < 0 then begin
+		output_string player.outchan "Requete Invalide lors de la phase de reflexion";
+		flush player.outchan
+	end else begin
+		ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 0.0 });
+		let rec trouve l =
+			match l with
+			 [] -> []
+			|h::t -> if h.id = player.id then
+						trouve t
+					 else begin
+					 	output_string h.outchan (ilatrouve player.nom coups);
+					 	flush h.outchan;
+					 	let tail = trouve t in
+					 		h::tail
+					 end
+		and new_ench = { username = player.nom; id = player.id; outchan = player.outchan; cout = coups} in
+		liste_enchere := new_ench::(trouve !liste_enchere);
+		output_string player.outchan (tuastrouve ());
+		flush player.outchan;
+		begin_enchere ();
+	end
+;;
+
+let traitement_solution_resolution (player:joueur) args =
+	let head = (List.hd !liste_enchere)
+	and deplacement = List.nth args 1 in
+	if head.id = player.id then
+	let liste_move =movement_of_string deplacement in
+		if (List.length liste_move) = 0 then begin
+			output_string player.outchan "Requete invalide: ce n'est pas une liste de mouvement\n";
+			flush player.outchan
+		end else begin
+			ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval =0.0; it_value = 0.0});
+			let transmit_solution (ench:joueur) = output_string ench.outchan (sasolution player.nom deplacement); flush ench.outchan in
+			List.iter transmit_solution !joueur_liste;
+			if GameState.is_valid liste_move then begin
+				let transmit_res (pla:joueur) = output_string pla.outchan (bonne ()); flush pla.outchan in
+				List.iter transmit_res !joueur_liste;
+				player.score <- player.score +1;
+				if player.score  = scoreMax then
+					fin_session ()
+				else
+					begin_reflexion ()
+			end else if (List.length !liste_enchere)>1 then begin
+					let rec nextPlayer = List.nth !liste_enchere 1
+					and ite (pla:enchere) = output_string pla.outchan (mauvaise nextPlayer.username);
+					flush pla.outchan in
+					List.iter ite !liste_enchere;
+					liste_enchere := List.tl !liste_enchere;
+					ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle end_reso));
+					ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 60.0})
+				end else begin
+					let ite (pla:joueur) = output_string pla.outchan (finreso()); flush pla.outchan in
+					List.iter ite !joueur_liste;
+					begin_reflexion()
+				end
+	end else begin
+				output_string player.outchan "Ce n'est pas votre tour de jouer\n";
+				flush player.outchan;
+	end
+;;
+
+let traitement_solution player args =
+	Mutex.lock mutex_joueurL;
+	Mutex.lock mutex_phase;
+	let test () =match !phase with
+	 1 -> traitement_solution_reflexion player args
+	|3 -> traitement_solution_resolution player args
+	|_ -> begin output_string player.outchan "Requete Invalide: Nous ne sommes ni en phase de reflexion ni en phase de resolution\n"; flush player.outchan end in
+	test ();
+	Mutex.unlock mutex_phase;
+	Mutex.unlock mutex_joueurL;
+;;
   
 
 (*-----------------------------------*)
@@ -378,7 +474,7 @@ let creer_serveur max_co =
   sock;;
 
 let serveur_process sock service=
-	Sys.signal Sys.sigalrm Sys.Signal_ignore;
+	ignore(Sys.signal Sys.sigalrm Sys.Signal_ignore);
   while true do
 	try
     let(s, caller) = Unix.accept sock
