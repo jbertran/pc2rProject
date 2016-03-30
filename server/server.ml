@@ -64,10 +64,13 @@ let received_request req =
   | "SORT" -> (2, args)
   | "ENCHERE" -> (3, args)
   | "SOLUTION" -> (4, args)
+  | "MESSAGE" -> (5,args)
   | _ -> (-1, args)
  else
  	(-1, [])
 
+
+(* Transformation des deplacement en liste de ( color * dir ) *)
 let isMoveList str =
 	let r = Str.regexp "([RBJV][HBGD])*" in
 		Str.string_match r str 0
@@ -152,10 +155,15 @@ let finreso () =
 	
 let troplong users =
 	"TROPLONG/"^users^"/\n"
+
+let message args =
+	"MESSAGE/"^(List.hd args)^"/"^(List.nth args 1)^"/\n"
 	
 (*-----------------------------------*)
 (*Fonctions de gestions de la session*)
 (*-----------------------------------*)
+
+(* Termine la session courante et demare la suivante si possible *)
 let rec fin_session () =
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval =0.0; it_value =0.0});
 	ignore(Sys.signal Sys.sigalrm Sys.Signal_default);
@@ -173,6 +181,7 @@ let rec fin_session () =
 	else
 		()
 
+(* Fonction appelle lors d'un timeout de la phase de resolution du joueur actif *)
 and end_reso _ =
 	Mutex.lock mutex_joueurL;
 	Mutex.lock mutex_phase;
@@ -194,6 +203,7 @@ and end_reso _ =
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
+(*Initialise les ressource pour le debut de la phase de resolution*)
 and begin_reso _ =
 	Mutex.lock mutex_joueurL;
 	Mutex.lock mutex_phase;
@@ -209,13 +219,13 @@ and begin_reso _ =
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
-
+(*Initialise les ressource pour le debut de la phase d'enchere*)
 and begin_enchere () =
 	phase := 2;
 	ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle begin_reso));
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value =30.0})
 
-
+(* fonction appele lors du timeout de la phase de reflexion *)
 and timeout_reflexion _ =
 	Mutex.lock mutex_joueurL;
 	Mutex.lock mutex_phase;
@@ -227,6 +237,7 @@ and timeout_reflexion _ =
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
+(* Fonction appele pour initialiser les ressources au debut de la phase de reflexion *)
 and begin_reflexion () = 
 	incr tourNum;
 	GameState.new_puzzle ();
@@ -241,7 +252,7 @@ and begin_reflexion () =
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 300.0});
 	
 	
-
+(* Fonction appele lors d'un timeout du debut de la session *) 
 and lock_reflexion _ = 
 	Mutex.lock mutex_joueurL;
 	Mutex.lock mutex_phase;
@@ -249,6 +260,7 @@ and lock_reflexion _ =
 	Mutex.unlock mutex_phase;
 	Mutex.unlock mutex_joueurL
 
+(* Initialise les ressources pour debuter une nouvelle session *)
 and debut_session () =
 	GameState.init_state "./conf/basegame.conf";
 	let func (play:joueur) = output_string play.outchan (session()); flush play.outchan in
@@ -259,7 +271,7 @@ and debut_session () =
 (*--------------------------------------*)
 (* Fonctions de Traitement des requetes *)
 (*--------------------------------------*)
-
+(* Fonction de traitement de la requete connexion *)
 let traitement_connecte (player:joueur) =
   Mutex.lock mutex_joueurL;
   incr nbJoueur;
@@ -285,6 +297,7 @@ let traitement_connecte (player:joueur) =
   	 Mutex.unlock mutex_phase;
      Mutex.unlock mutex_joueurL;;
 
+(* Fonction de traitement de la requete de deconnexion *)
 let traitement_sortie (player:joueur)= 
   Mutex.lock mutex_joueurL;
   nbJoueur := !nbJoueur -1;
@@ -308,6 +321,7 @@ let traitement_sortie (player:joueur)=
   Mutex.unlock mutex_phase;
   Mutex.unlock mutex_joueurL;;
   
+(* Fonction de traitement de la requete enchere *)
 let traitement_enchere player args =
   Mutex.lock mutex_phase;
   if !phase = 2 then
@@ -383,6 +397,7 @@ let traitement_enchere player args =
   Mutex.unlock mutex_phase
 ;;
 
+(* Fonction de traitement de la requet solution de la phase reflexion *)
 let traitement_solution_reflexion (player:joueur) args = 
 	let coups =try  int_of_string (List.nth args 1) with _ -> -1 in
 	if coups < 0 then begin
@@ -409,6 +424,7 @@ let traitement_solution_reflexion (player:joueur) args =
 	end
 ;;
 
+(* Fonction de traitement de la requete solution de resolution *)
 let traitement_solution_resolution (player:joueur) args =
 	let head = (List.hd !liste_enchere)
 	and deplacement = List.nth args 1 in
@@ -448,6 +464,7 @@ let traitement_solution_resolution (player:joueur) args =
 	end
 ;;
 
+(* Choisis quel traitement appliquer a la requete solution entre les deux disponible *)
 let traitement_solution player args =
 	Mutex.lock mutex_joueurL;
 	Mutex.lock mutex_phase;
@@ -460,6 +477,18 @@ let traitement_solution player args =
 	Mutex.unlock mutex_joueurL;
 ;;
   
+let traitement_message (player:joueur) args =
+	let sendMessage (pla:joueur) =
+		if pla.id = player.id then 
+			()
+		else begin
+			output_string pla.outchan (message args);
+			flush pla.outchan
+		end in
+	Mutex.lock mutex_joueurL;
+	List.iter sendMessage !joueur_liste;
+	Mutex.unlock mutex_joueurL;;
+
 
 (*-----------------------------------*)
 (*--------Serveurs Et Threads--------*)
@@ -492,6 +521,7 @@ let boucle_joueur player =
 		2 -> traitement_sortie player; raise Exit;
       | 3 -> traitement_enchere player args
       | 4 -> traitement_solution player args
+      | 5 -> traitement_message player args
       | _ ->
          begin 
            output_string player.outchan ("REQUETE INVALIDE : "^line^"\n");
