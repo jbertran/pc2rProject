@@ -9,6 +9,7 @@
 class session {
   client* connexion;
   repr* game;
+  //Ui::GUI* gui;
   int tours;
   std::string username;
   std::unordered_map<std::string, int> scores;

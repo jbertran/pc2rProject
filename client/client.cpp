@@ -58,7 +58,7 @@ string client::recv_message() {
  * Say hello to the server, await ack
  */
 status client::handshake(string user) {
-  sock_send(this->sock, "CONNEX/"+user);
+  sock_send(this->sock, "CONNEXION/"+user);
   string await = "BIENVENUE/"+user;
   string reply = sock_recv(sock);
   if (await.compare(reply) == 0)
@@ -72,7 +72,7 @@ void client::terminate() {
     cerr << "Close error" << endl;
 }
 
-
+/*
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     cerr << "Expected hostname and port\n";
@@ -92,3 +92,4 @@ int main(int argc, char* argv[]) {
       inet->terminate();
   }
 }
+*/

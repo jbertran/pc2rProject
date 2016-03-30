@@ -5,11 +5,23 @@
 
 using namespace std;
 
-session::session(client* c, string user) {
-  connexion = c;
-  username = user;
-  game = new repr();
+session::session(client* c, string user) :
+  connexion(c),
+  username(user)
+{
+  game = new repr;
+  // gui = new Ui::GUI;
   scores = unordered_map<string, int>();
+}
+
+/**
+ *  To run in a new thread
+ *  Communicate with gui through the reference
+ */
+
+void session::init(string username) {
+  client->send("CONNEXION/" + username);
+  
 }
 
 void session::start() {
