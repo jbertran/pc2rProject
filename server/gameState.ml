@@ -16,7 +16,9 @@ type game =
     (* Matrice murs *)
     mutable murs : (dir list) array array;
   };;
-  
+exception Unknown_color of string;;
+exception Unknown_direction of string;;
+
 (**************************)
 (******    GLOBALS   ******)
 (**************************)
@@ -42,14 +44,16 @@ let make_dir str =
     "H" -> H
   | "B" -> B
   | "G" -> G
-  | "D" -> D;;
+  | "D" -> D
+  | _ -> raise (Unknown_direction "Wrong direction");;
     
 let make_color str = 
   match str with 
     "R" -> C_R
   | "J" -> C_J 
   | "V" -> C_V 
-  | "B" -> C_B;;
+  | "B" -> C_B
+  | _ -> raise (Unknown_color "Wrong color");;
 
 let read_walls_file filepath = 
   let reader = open_in filepath 
@@ -123,12 +127,12 @@ let init_state confFile =
   game_state.murs <- (Array.make_matrix h w []);
   (* Murs extérieurs *)
   for i = 0 to (game_state.height - 1) do
-    addWall i 0 G;
-    addWall i (game_state.width - 1) D;
+    addWall 0 i G;
+    addWall (game_state.width - 1) i D;
   done;
   for j = 0 to (game_state.width - 1) do
-    addWall 0 j H;
-    addWall (game_state.height - 1) j B;
+    addWall j 0 H;
+    addWall j (game_state.height - 1) B;
   done;
   (* Robots et destination *)
   let poslist = ref [] in
@@ -173,6 +177,13 @@ let wall_list () =
 let goal () = 
   game_state.cible
 ;;
+
+let colToInt col = 
+  match col with
+    C_R -> 0
+  | C_B -> 1
+  | C_J -> 2
+  | C_V -> 3
 
 let robot col = 
   match col with
@@ -223,34 +234,34 @@ let rec move_robot pos d =
   let x, y = pos in
   match d with 
     H ->  
-    if ((hasWall x y H) || (hasWall (x-1) y B) || (hasRobot (x-1) y)); then
+    if ((hasWall x y H) || (hasWall x (y-1) B) || (hasRobot x (y-1))); then
       (x, y)
     else
-      move_robot ((x-1), y) d
+      move_robot (x, (y-1)) d
   | B ->
-     if ((hasWall x y B) || (hasWall (x+1) y H) || (hasRobot (x+1) y)); then
-       (x, y)
-     else
-       move_robot ((x+1), y) d
-  | G ->
-     if ((hasWall x y G) || (hasWall x (y-1) D) || (hasRobot x (y-1))); then
-       (x, y)
-     else
-       move_robot (x, (y-1)) d
-  | D -> 
-     if ((hasWall x y D) || (hasWall x (y+1) G) || (hasRobot x (y+1))); then
+     if ((hasWall x y B) || (hasWall x (y+1) H) || (hasRobot x (y+1))); then
        (x, y)
      else
        move_robot (x, (y+1)) d
+  | G ->
+     if ((hasWall x y G) || (hasWall (x-1) y D) || (hasRobot (x-1) y)); then
+       (x, y)
+     else
+       move_robot ((x-1), y) d
+  | D -> 
+     if ((hasWall x y D) || (hasWall (x+1) y G) || (hasRobot (x+1) y)); then
+       (x, y)
+     else
+       move_robot ((x+1), y) d
 ;;
 
 let set_robot gs pos col = 
   let (x, y) = pos in
   match col with 
     C_R -> gs.robots.(0) <- (x, y)
-  | C_B -> gs.robots.(0) <- (x, y)
-  | C_J -> gs.robots.(0) <- (x, y)
-  | C_V -> gs.robots.(0) <- (x, y)
+  | C_B -> gs.robots.(1) <- (x, y)
+  | C_J -> gs.robots.(2) <- (x, y)
+  | C_V -> gs.robots.(3) <- (x, y)
 ;;
 
 let new_target () =
@@ -285,12 +296,18 @@ let is_valid movelist =
   let rec valid_rec l = 
     match l with
       (col, d)::tail -> 
-      let (xm, ym) = move_robot (robot col) d in
+      let (xm, ym) = move_robot (tmpstate.robots.(colToInt col)) d in
+      begin
+      print_int xm;
+      print_string ",";
+      print_int ym;
+      print_endline "";
       set_robot tmpstate (xm, ym) col;
       valid_rec tail
+      end
     | [] -> 
        let (xc, yc) = tmpstate.cible
-       and (xr, yr) = robot tmpstate.robot_cible in
+       and (xr, yr) = tmpstate.robots.(colToInt tmpstate.robot_cible) in
        ((xc == xr) && (yc == yr))
   in valid_rec movelist
 ;;

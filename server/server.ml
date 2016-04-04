@@ -72,7 +72,7 @@ let received_request req =
 
 (* Transformation des deplacement en liste de ( color * dir ) *)
 let isMoveList str =
-  let r = Str.regexp "([RBJV][HBGD])*" in
+  let r = Str.regexp "\([RBJV][HBGD]\)*" in
   Str.string_match r str 0
 
 let rec movement_of_string_rec str =
@@ -85,7 +85,6 @@ let rec movement_of_string_rec str =
 
 let movement_of_string (str:string) =
   if isMoveList str then begin
-      print_endline "REUSSI";
       movement_of_string_rec str
     end
   else
@@ -237,7 +236,7 @@ and timeout_reflexion _ =
   Mutex.unlock mutex_phase;
   Mutex.unlock mutex_joueurL
 
-(* Fonction appele pour initialiser les ressources au debut de la phase de reflexion *)
+(* Fonction appele pour in0,0itialiser les ressources au debut de la phase de reflexion *)
 and begin_reflexion () = 
   incr tourNum;
   GameState.new_puzzle ();
@@ -411,7 +410,7 @@ let traitement_enchere player args =
 let traitement_solution_reflexion (player:joueur) args = 
   let coups =try  int_of_string (List.nth args 1) with _ -> -1 in
   if coups < 0 then begin
-      output_string player.outchan "Requete Invalide lors de la phase de reflexion";
+      output_string player.outchan "Requete Invalide lors de la phase de reflexion\n";
       flush player.outchan
     end else begin
       ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 0.0 });
@@ -447,19 +446,24 @@ let traitement_solution_resolution (player:joueur) args =
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval =0.0; it_value = 0.0});
 	let transmit_solution (ench:joueur) = output_string ench.outchan (sasolution player.nom deplacement); flush ench.outchan in
 	List.iter transmit_solution !joueur_liste;
+		print_endline "AVANT if";
 	if GameState.is_valid liste_move then begin
+		print_endline "REUSSI";
 	    let transmit_res (pla:joueur) = output_string pla.outchan (bonne ()); flush pla.outchan in
 	    List.iter transmit_res !joueur_liste;
+		print_endline "DANS if";
 	    player.score <- player.score +1;
 	    if player.score  = scoreMax then
 	      fin_session ()
 	    else
 	      begin_reflexion ()
-	  end else if (List.length !liste_enchere)>1 then begin
+	  end else begin
+	  	print_endline "RATE";
+	  	if (List.length !liste_enchere)>1 then begin
 	    let rec nextPlayer = List.nth !liste_enchere 1
-	    and ite (pla:enchere) = output_string pla.outchan (mauvaise nextPlayer.username);
+	    and ite (pla:joueur) = output_string pla.outchan (mauvaise nextPlayer.username);
 				    flush pla.outchan in
-	    List.iter ite !liste_enchere;
+	    List.iter ite !joueur_liste;
 	    liste_enchere := List.tl !liste_enchere;
 	    ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle end_reso));
 	    ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 60.0})
@@ -467,7 +471,7 @@ let traitement_solution_resolution (player:joueur) args =
 	    let ite (pla:joueur) = output_string pla.outchan (finreso()); flush pla.outchan in
 	    List.iter ite !joueur_liste;
 	    begin_reflexion()
-	  end
+	  end end
       end else begin
       output_string player.outchan "Ce n'est pas votre tour de jouer\n";
       flush player.outchan;
