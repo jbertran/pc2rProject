@@ -298,10 +298,6 @@ let is_valid movelist =
       (col, d)::tail -> 
       let (xm, ym) = move_robot (tmpstate.robots.(colToInt col)) d in
       begin
-      print_int xm;
-      print_string ",";
-      print_int ym;
-      print_endline "";
       set_robot tmpstate (xm, ym) col;
       valid_rec tail
       end

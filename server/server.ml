@@ -446,19 +446,15 @@ let traitement_solution_resolution (player:joueur) args =
 	ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval =0.0; it_value = 0.0});
 	let transmit_solution (ench:joueur) = output_string ench.outchan (sasolution player.nom deplacement); flush ench.outchan in
 	List.iter transmit_solution !joueur_liste;
-		print_endline "AVANT if";
-	if GameState.is_valid liste_move then begin
-		print_endline "REUSSI";
+	if ((List.length args) <= head.cout) && (GameState.is_valid liste_move) then begin
 	    let transmit_res (pla:joueur) = output_string pla.outchan (bonne ()); flush pla.outchan in
 	    List.iter transmit_res !joueur_liste;
-		print_endline "DANS if";
 	    player.score <- player.score +1;
 	    if player.score  = scoreMax then
 	      fin_session ()
 	    else
 	      begin_reflexion ()
 	  end else begin
-	  	print_endline "RATE";
 	  	if (List.length !liste_enchere)>1 then begin
 	    let rec nextPlayer = List.nth !liste_enchere 1
 	    and ite (pla:joueur) = output_string pla.outchan (mauvaise nextPlayer.username);
@@ -532,10 +528,16 @@ let boucle_joueur player =
       let line = input_line player.inchan in
       let (num_req, args) = received_request line in
       match num_req with
-	2 -> traitement_sortie player; raise Exit;
-      | 3 -> traitement_enchere player args
-      | 4 -> traitement_solution player args
-      | 5 -> traitement_message player args
+		2 -> traitement_sortie player; raise Exit;
+      | 3 ->if(List.length args) = 2 then traitement_enchere player args
+      		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+     		flush player.outchan end
+      | 4 -> if(List.length args) = 2 then traitement_solution player args
+      		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+      		flush player.outchan end
+      | 5 -> if(List.length args) = 2 then traitement_message player args
+      		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+      		flush player.outchan end
       | _ ->
          begin 
            output_string player.outchan ("REQUETE INVALIDE : "^line^"\n");
@@ -556,7 +558,8 @@ let joueur_service sock=
   else
     begin 
       output_string outchan "REQUETE INVALIDE: attente d'une requete de la forme: CONNEXION/username\n"; 
-      flush outchan
+      flush outchan;
+      Unix.close sock
     end
 
 let main ()=
