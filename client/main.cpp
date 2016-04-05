@@ -1,13 +1,21 @@
-#include <iostream>
+#include "gui.h"
 #include <cstdlib>
-#include "client.h"
-#include "tools.h"
-#include "../pc2rGUI/gui.h"
+#include <QApplication>
+#include <QTextEdit>
+#include <QLineEdit>
+#include <QLayout>
+#include <QPixmap>
 
-int main(int argc, char* argv[]) {
-  if (argc < 3) {
-    std::cout << "Usage: client <host> <port>" << std::endl;
-    std::exit;
-  }
-  
+#define HOST "127.0.0.1"
+#define PORT 2016
+
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    
+    GUI* w = new GUI(HOST, PORT);
+    
+    w->show();
+
+    return a.exec();
 }

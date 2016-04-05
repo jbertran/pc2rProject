@@ -1,8 +1,11 @@
 #ifndef __tools__
 #define __tools__
 
+#include <vector>
+#include <unordered_map>
+
 enum class status {OK, KO};
-enum class Incoming {WELCOME, CONNECTE, DISC, SORTI, SESSION, VAINQ, TOUR, TUAT, ILAT, FINREF, TUENCH, ECHECENCH, ILENCH, FINENCH, SASOL, BONNE, MAUVAISE, FINRESO, TROPLONG};
+enum class Incoming {WELCOME, CONNECTE, DISC, SORTI, SESSION, VAINQ, TOUR, TUAT, ILAT, FINREF, TUENCH, ECHECENCH, ILENCH, FINENCH, SASOL, BONNE, MAUVAISE, FINRESO, TROPLONG, MSG};
 enum class Phase {IDLE, THINK, AUCTION, SOLVE};
 
 enum color     { Rouge, Jaune, Vert, Bleu  };

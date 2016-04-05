@@ -1,26 +1,31 @@
-#ifndef __session__
-#define __session__
+#ifndef __qsession__
+#define __qsession__
 
+#include <QThread>
 #include <unordered_map>
-#include <vector>
-#include "repr.h"
+#include "tools.h"
 #include "client.h"
+#include "repr.h"
+#include "gui.h"
 
-class session {
-  client* connexion;
-  repr* game;
-  //Ui::GUI* gui;
-  int tours;
-  std::string username;
-  std::unordered_map<std::string, int> scores;
+class GUI;
+
+class qSessionThread : public QThread {
+
+  Q_OBJECT
+
 public:
-  session(client* c, std::string u);
-  void start();
-  
+  explicit qSessionThread(client* clt, QObject* parent = 0);
+
+protected:
+  void run();
+
+signals:
   /** General messages **/
   void handleConnectMsg(std::vector<std::string> args);
   void handleLeftMsg(std::vector<std::string> args);
   void handleDiscMsg(std::vector<std::string> args);
+  void handleChatMsg(std::vector<std::string> args);
 
   /** Idle Phase Messages **/
   void handleWelcomeMsg(std::vector<std::string> args);
@@ -45,6 +50,9 @@ public:
   void handleBadSolMsg(std::vector<std::string> args);
   void handleEndSolveMsg(std::vector<std::string> args);
   void handleTimeoutMsg(std::vector<std::string> args);
+
+private:
+  client* connexion;
 };
 
 #endif

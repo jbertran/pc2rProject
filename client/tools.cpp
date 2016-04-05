@@ -11,10 +11,8 @@
 
 #define MSG_SIZE 1024
 
-using namespace std;
-
 /** DATA HELPERS **/
-unordered_map<string, Incoming> servermsgs = 
+std::unordered_map<std::string, Incoming> servermsgs = 
   {
     {"BIENVENUE",    Incoming::WELCOME},
     {"CONNECTE",     Incoming::CONNECTE},
@@ -34,11 +32,12 @@ unordered_map<string, Incoming> servermsgs =
     {"BONNE",        Incoming::BONNE},
     {"MAUVAISE",     Incoming::MAUVAISE},
     {"FINRESO",      Incoming::FINRESO},
-    {"TROPLONG",     Incoming::TROPLONG}
+    {"TROPLONG",     Incoming::TROPLONG},
+    {"MESSAGE",      Incoming::MSG}
   };
 
-string remove(string msg, char rm) {
-  string res = "";
+std::string remove(std::string msg, char rm) {
+  std::string res = "";
   for (size_t i = 0; i < msg.length(); i++) {
     if (msg[i] != rm)
       res += msg[i];
@@ -46,9 +45,9 @@ string remove(string msg, char rm) {
   return res;
 }
 
-vector<string> split(string msg, char delim) {
-  vector<string> result;
-  string tmp = "";
+std::vector<std::string> split(std::string msg, char delim) {
+  std::vector<std::string> result;
+  std::string tmp = "";
   while (msg.length() > 0) {
     if (msg[0] == delim) {
       result.push_back(tmp);
@@ -56,43 +55,43 @@ vector<string> split(string msg, char delim) {
     }
     else
       tmp = tmp + msg[0];
-    msg = msg.substr(1, string::npos);
+    msg = msg.substr(1, std::string::npos);
   }
   if (tmp.length() > 0)
     result.push_back(tmp);
   return result;
 }
 
-Incoming getCmd(string msg) {
-  vector<string> vect = split(msg, '/');
+Incoming getCmd(std::string msg) {
+  std::vector<std::string> vect = split(msg, '/');
   return servermsgs[vect[0]];
 }
 
-vector<string> getArgs(string msg) {
-  vector<string> vect = split(msg, '/');
-  return vector<string>(vect.begin() + 1, vect.end());
+std::vector<std::string> getArgs(std::string msg) {
+  std::vector<std::string> vect = split(msg, '/');
+  return std::vector<std::string>(vect.begin() + 1, vect.end());
 }
 
 /** INET STUFF **/
 
-void sock_send(int sock, string message) {
+void sock_send(int sock, std::string message) {
   if (send(sock, message.c_str(), message.length(), 0) < 0)
-    cerr << "Error sending" << message << endl;
+    std::cerr << "Error sending" << message << std::endl;
 }
 
-string sock_recv(int sock) {
+std::string sock_recv(int sock) {
   char* buff = (char*) malloc(MSG_SIZE * sizeof(*buff));
   if (recv(sock, buff, MSG_SIZE, 0) < 0) {
-    cerr << "Error receiving message from server" << endl;
+    std::cerr << "Error receiving message from server" << std::endl;
     return "";
   }
   else
-    return string(buff);
+    return std::string(buff);
 }
 
 /** ENUMS **/
 color stocol(char s) {
-  unordered_map<char, color> stocol =
+  std::unordered_map<char, color> stocol =
     {
       {'R', color::Rouge},
       {'J', color::Jaune},
@@ -100,7 +99,7 @@ color stocol(char s) {
       {'B', color::Bleu}
     };
   if (stocol.count(s) <= 0) {
-    cerr << "Unknown color!" << endl;
+    std::cerr << "Unknown color!" << std::endl;
     return stocol['R'];
   }
   else
@@ -108,7 +107,7 @@ color stocol(char s) {
 } 
 
 direction stodir(char s) {
-  unordered_map<char, direction> stodir = 
+  std::unordered_map<char, direction> stodir = 
     {
       {'H', direction::Haut},
       {'B', direction::Bas},
@@ -116,7 +115,7 @@ direction stodir(char s) {
       {'D', direction::Droite}
     };
   if (stodir.count(s) <= 0) {
-    cerr << "Unknown direction!" << endl;
+    std::cerr << "Unknown direction!" << std::endl;
     return stodir['H'];
   }
   else
@@ -134,7 +133,7 @@ char coltos(color c) {
   case color::Bleu:
     return 'B';
   default:
-    cerr << "Unknown color!" << endl;
+    std::cerr << "Unknown color!" << std::endl;
     return color::Rouge;
   }
 } 
@@ -150,7 +149,7 @@ char dirtos(direction d) {
   case direction::Droite:
     return 'D';
   default:
-    cerr << "Unknown direction!" << endl;
+    std::cerr << "Unknown direction!" << std::endl;
     return direction::Haut;
   }
 }
