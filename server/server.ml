@@ -33,11 +33,11 @@ and mutex_joueurL = Mutex.create ()
 type enchere = {
     id: int;
     username : string;
-    mutable cout : int;
+    cout : int;
     outchan : out_channel
   }
 
-let create_enchere uid name outc = {
+let creer_enchere uid name outc = {
     id = uid;
     username =name;
     outchan = outc;
@@ -54,6 +54,8 @@ and scoreMax = 3
 (* Fonctions de manipulation des requetes *)
 (*----------------------------------------*)
 
+(*Transfome une requete, sous forme de String, en une paire avec l'id
+ de la requete et ces arguments *)
 let received_request req =
   let splited = Str.split (Str.regexp "/") req in
   if (List.length splited) > 0 then
@@ -241,7 +243,7 @@ and begin_reflexion () =
   incr tourNum;
   GameState.new_puzzle ();
   phase := 1;
-  let playToEnch (pla:joueur) =begin pla.playing <- true; create_enchere pla.id pla.nom pla.outchan end in
+  let playToEnch (pla:joueur) =begin pla.playing <- true; creer_enchere pla.id pla.nom pla.outchan end in
   liste_enchere :=List.map playToEnch !joueur_liste;
   
   ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle timeout_reflexion));
@@ -261,7 +263,7 @@ and lock_reflexion _ =
 
 (* Initialise les ressources pour debuter une nouvelle session *)
 and debut_session () =
-  GameState.init_state "./conf/basegame.conf";
+  GameState.init_state "./conf/enigme.conf";
   let func (play:joueur) = output_string play.outchan (session()); flush play.outchan in
   List.iter func !joueur_liste;
   ignore(Sys.signal Sys.sigalrm (Sys.Signal_handle lock_reflexion));
@@ -270,6 +272,7 @@ and debut_session () =
 (*--------------------------------------*)
 (* Fonctions de Traitement des requetes *)
 (*--------------------------------------*)
+
 (* Fonction de traitement de la requete connexion *)
 let traitement_connecte (player:joueur) =
   Mutex.lock mutex_joueurL;
@@ -408,29 +411,35 @@ let traitement_enchere player args =
 
 (* Fonction de traitement de la requet solution de la phase reflexion *)
 let traitement_solution_reflexion (player:joueur) args = 
-  let coups =try  int_of_string (List.nth args 1) with _ -> -1 in
-  if coups < 0 then begin
-      output_string player.outchan "Requete Invalide lors de la phase de reflexion\n";
-      flush player.outchan
-    end else begin
-      ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 0.0 });
-      let rec trouve l =
-	match l with
-	  [] -> []
-	 |h::t -> if h.id = player.id then
-		    trouve t
-		  else begin
-		      output_string h.outchan (ilatrouve player.nom coups);
-		      flush h.outchan;
-		      let tail = trouve t in
-		      h::tail
-		    end
-      and new_ench = { username = player.nom; id = player.id; outchan = player.outchan; cout = coups} in
-      liste_enchere := new_ench::(trouve !liste_enchere);
-      output_string player.outchan (tuastrouve ());
-      flush player.outchan;
-      begin_enchere ();
-    end
+	if player.playing then
+	  let coups =try  int_of_string (List.nth args 1) with _ -> -1 in
+	  if coups < 0 then begin
+		  output_string player.outchan "Requete Invalide lors de la phase de reflexion\n";
+		  flush player.outchan
+		end else begin
+		  ignore(Unix.setitimer Unix.ITIMER_REAL {it_interval = 0.0; it_value = 0.0 });
+		  let rec trouve l =
+		match l with
+		  [] -> []
+		 |h::t -> if h.id = player.id then
+				trouve t
+			  else begin
+				  output_string h.outchan (ilatrouve player.nom coups);
+				  flush h.outchan;
+				  let tail = trouve t in
+				  h::tail
+				end
+		  and new_ench = { username = player.nom; id = player.id; outchan = player.outchan; cout = coups} in
+		  liste_enchere := new_ench::(trouve !liste_enchere);
+		  output_string player.outchan (tuastrouve ());
+		  flush player.outchan;
+		  begin_enchere ();
+		end
+	else begin
+		output_string player.outchan "REQUETE INVALIDE: Vous ne jouez pas ce tours.";
+		flush player.outchan;
+	end
+		
 ;;
 
 (* Fonction de traitement de la requete solution de resolution *)
@@ -487,6 +496,7 @@ let traitement_solution player args =
   Mutex.unlock mutex_joueurL;
 ;;
   
+(*Fonction de traitement de la requetes message pour le chat*)
 let traitement_message (player:joueur) args =
   let sendMessage (pla:joueur) =
     if pla.id = player.id then 
@@ -525,24 +535,26 @@ let serveur_process sock service=
 let boucle_joueur player =
   try
     while true do
-      let line = input_line player.inchan in
-      let (num_req, args) = received_request line in
-      match num_req with
-		2 -> traitement_sortie player; raise Exit;
-      | 3 ->if(List.length args) = 2 then traitement_enchere player args
-      		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
-     		flush player.outchan end
-      | 4 -> if(List.length args) = 2 then traitement_solution player args
-      		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
-      		flush player.outchan end
-      | 5 -> if(List.length args) = 2 then traitement_message player args
-      		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
-      		flush player.outchan end
-      | _ ->
-         begin 
-           output_string player.outchan ("REQUETE INVALIDE : "^line^"\n");
-           flush player.outchan
-         end
+    	try
+		  let line = input_line player.inchan in
+		  let (num_req, args) = received_request line in
+		  match num_req with
+			2 -> traitement_sortie player; raise Exit;
+		  | 3 ->if(List.length args) = 2 then traitement_enchere player args
+		  		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+		 		flush player.outchan end
+		  | 4 -> if(List.length args) = 2 then traitement_solution player args
+		  		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+		  		flush player.outchan end
+		  | 5 -> if(List.length args) = 2 then traitement_message player args
+		  		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+		  		flush player.outchan end
+		  | _ ->
+		     begin 
+		       output_string player.outchan ("REQUETE INVALIDE : "^line^"\n");
+		       flush player.outchan
+		     end
+    	with End_of_file ->traitement_sortie player; raise Exit;
     done;
   with Exit-> ();;
 

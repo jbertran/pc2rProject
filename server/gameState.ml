@@ -87,6 +87,7 @@ let rec present (a, b) l =
 let init_pos array size plist = 
   for i=0 to (size - 1) do
     let rec get_rnd () = 
+      Random.self_init ();
       let a = Random.int game_state.height
       and b = Random.int game_state.width in
       if (present (a, b) !plist) then (get_rnd ()) else (a, b)
