@@ -19,8 +19,7 @@ class Robot;
 GUI::GUI(const char* hname, int port, QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::GUI),
-  guiClient(new client(hname, port)),
-  guiRepr(new repr)
+  guiClient(new client(hname, port))
 {
   ui->setupUi(this);
   stack = new QStackedWidget(this);
@@ -33,6 +32,8 @@ GUI::GUI(const char* hname, int port, QWidget *parent) :
 
 void GUI::setupThreadConnections(qSessionThread* thr){
   ui_debug("Setting up thread connections");
+  QObject::connect(thr, SIGNAL(handleUnknownMessage(std::string)), this,
+		   SLOT(gui_handleUnknownMessage(std::string)));
   QObject::connect(thr, SIGNAL(handleConnectMsg(std::vector<std::string>)), this,
 		   SLOT(gui_handleConnectMsg(std::vector<std::string>)));
   QObject::connect(thr, SIGNAL(handleLeftMsg(std::vector<std::string>)), this,
@@ -130,34 +131,44 @@ void GUI::setupGame() {
   QLayout * gameScreen = new QHBoxLayout;
   mainLayout->addItem(gameScreen);
   // Plateau
-  PlateauWidget* p = new PlateauWidget;
-  p->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-  gameScreen->addWidget(p);
+  plateau = new PlateauWidget;
+  plateau->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  QObject::connect(plateau, SIGNAL(sendMoves(std::string)), this, SLOT(clientSendMoves(std::string)));
+  QObject::connect(this, SIGNAL(resetBoard()), plateau, SLOT(resetRepr()));
+  QObject::connect(this, SIGNAL(updateBoard()), plateau, SLOT(update()));
+  QObject::connect(this, SIGNAL(addWallBoard(int, int, direction)), 
+		   plateau, SLOT(addWallRepr(int, int, direction)));
+  gameScreen->addWidget(plateau);
   // Sidepanel
   QLayout* sidePanel = new QHBoxLayout;
   mainLayout->addItem(sidePanel);
   // Widget de comptage de coups:
   QLayout* coupsLayout = new QHBoxLayout;
-  QLabel* coupsText = new QLabel("Nombre de coups: ", p);
-  CoupsLabel* coups = new CoupsLabel(QString::number(0), p);
-  QObject::connect(p, SIGNAL(counterIncr()), coups, SLOT(incr()));
-  QObject::connect(p, SIGNAL(counterDecr()), coups, SLOT(decr()));
-  QObject::connect(p, SIGNAL(counterReset()), coups, SLOT(reset()));
+  QLabel* coupsText = new QLabel("Nombre de coups: ", plateau);
+  CoupsLabel* coups = new CoupsLabel(QString::number(0), plateau);
+  QObject::connect(plateau, SIGNAL(counterIncr()), coups, SLOT(incr()));
+  QObject::connect(plateau, SIGNAL(counterDecr()), coups, SLOT(decr()));
+  QObject::connect(plateau, SIGNAL(counterReset()), coups, SLOT(reset()));
   coupsLayout->addWidget(coupsText);
   coupsLayout->addWidget(coups);
   sidePanel->addItem(coupsLayout);
   // Boutons reset, undo, valider
   QPushButton* undo = new QPushButton("Annuler");
   QPushButton* reset = new QPushButton("Tout annuler");
-  QPushButton* valid = new QPushButton("Valider");
-  QPushButton* ench = new QPushButton(QString::fromUtf8("Enchérir"));
-  QObject::connect(valid, SIGNAL(clicked()), p, SLOT(valider()));
-  QObject::connect(undo, SIGNAL(clicked()), p, SLOT(undo()));
-  QObject::connect(reset, SIGNAL(clicked()), p, SLOT(reset()));
-  sidePanel->addWidget(valid);
+  validB = new QPushButton("Valider");
+  foundB = new QPushButton(trUtf8("Trouvé"));
+  enchB = new QPushButton(trUtf8("Enchérir"));
+  enchB->setDisabled(true);
+  QObject::connect(foundB, SIGNAL(clicked()), this, SLOT(trouve()));
+  QObject::connect(enchB, SIGNAL(clicked()), this, SLOT(encherir()));
+  QObject::connect(validB, SIGNAL(clicked()), plateau, SLOT(valider()));
+  QObject::connect(undo, SIGNAL(clicked()), plateau, SLOT(undo()));
+  QObject::connect(reset, SIGNAL(clicked()), plateau, SLOT(reset()));
+  sidePanel->addWidget(foundB);
+  sidePanel->addWidget(validB);
   sidePanel->addWidget(undo);
   sidePanel->addWidget(reset);
-  sidePanel->addWidget(ench);
+  sidePanel->addWidget(enchB);
   // Widget de chat et console
   QLayout* dispLayout = new QVBoxLayout;
   QLayout* chatLayout = new QVBoxLayout;
@@ -171,9 +182,27 @@ void GUI::setupGame() {
   dispLayout->addItem(chatLayout);
   dispLayout->addWidget(console);
   gameScreen->addItem(dispLayout);
-    
   gameLayout = new QWidget;
   gameLayout->setLayout(mainLayout);
+}
+
+void GUI::closeEvent(QCloseEvent* cE) {
+  guiClient->terminate();
+}
+
+void GUI::encherir() {
+  int ench = QInputDialog::getInt(this, trUtf8("Enchère"), trUtf8("Enchère à envoyer"));
+  guiClient->send_message("ENCHERE/"+username+"/"+std::to_string(ench)+"/\n");
+}
+
+void GUI::trouve() {
+  int coups = QInputDialog::getInt(this, trUtf8("Solution"), 
+				  trUtf8("Nombre de coups trouvé"));
+  guiClient->send_message("TROUVE/"+username+"/"+std::to_string(coups)+"/\n");
+}
+
+void GUI::clientSendMoves(std::string moves) {
+  guiClient->send_message("SOLUTION/"+username+"/"+moves+"/\n");
 }
 
 GUI::~GUI()
@@ -186,6 +215,11 @@ GUI::~GUI()
 /****************************************************/
 
 /** General messages **/
+
+void GUI::gui_handleUnknownMessage(std::string msg) {
+  ui_debug("handling unknownmsg");
+  consoleMsg(msg);
+}
 
 void GUI::gui_handleConnectMsg(std::vector<std::string> args) {
   std::string user = args[0];
@@ -217,7 +251,6 @@ void GUI::gui_handleChatMsg(std::vector<std::string> args) {
 // Never used. Welcome is received in the handshake
 void GUI::gui_handleWelcomeMsg(std::vector<std::string> args) {
   ui_debug("handling welcomemsg");
-  std::cout << "Serveur: sup. Ne devrait pas arriver en temps normal" << std::endl;
 }
 
 void GUI::gui_handleSessionMsg(std::vector<std::string> args) {
@@ -225,21 +258,23 @@ void GUI::gui_handleSessionMsg(std::vector<std::string> args) {
   std::vector<std::string> walls = split(game, ')');
   walls.pop_back(); // Remove the trailing empty string
   ui_debug("handling sessionmsg");
+  plateau->resetRepr();
   for (std::string wall : walls) {
     wall = wall.substr(1, std::string::npos);
     std::vector<std::string> coords = split(wall, ',');
     // Hard-coded for x, y, dir
-    this->guiRepr->addWall(stoi(coords[0]), 
-			   stoi(coords[1]), 
-			   stodir((char)coords[2][0]));
+    int x = stoi(coords[0]), y = stoi(coords[1]);
+    direction d = stodir((char)coords[2][0]);
+    plateau->getRepr()->addWall(x, y, d);
   }
+  plateau->repaint();
   consoleMsg("Server provided new game board.");
 }
 
 std::vector<coord> parsePuzzle(std::vector<std::string> puzzle) {
   std::vector<coord> res;
-  // Hardcoded for groups of coords
-  for (size_t i = 0; i < puzzle.size(); i+=2) {
+  // Hardcoded for 5 groups of coords
+  for (size_t i = 0; i < 10; i+=2) {
     res.push_back({stoi(puzzle[i]), stoi(puzzle[i+1])});
   }
   return res;
@@ -253,10 +288,12 @@ void GUI::gui_handleTurnMsg(std::vector<std::string> args) {
   puzzle = puzzle.substr(1, puzzle.length() - 2);
   std::vector<coord> pos = parsePuzzle(split(puzzle, ','));
   // Set the new robot + target positions
-  // Hard-coded for single target
-  for (size_t i = 0; i < pos.size() - 1; i++)
-    guiRepr->setRobot((color) i, pos[i]);
-  guiRepr->setCible(pos[pos.size() - 1]);
+  // Hard-coded for single target trailing the robot pos
+  for (size_t i = 0; i < pos.size() - 1; i++) {
+    plateau->getRepr()->setRobot((color) i, pos[i]);
+  }
+  plateau->getRepr()->setRobotCible(stocol(puzzle[puzzle.length()-2]));
+  plateau->getRepr()->setCible(pos[pos.size() - 1]);
   
   // Dpkg the score recap for current players
   std::string tmp = "";
@@ -289,6 +326,7 @@ void GUI::gui_handleWinnerMsg(std::vector<std::string> args) {
 
 void GUI::gui_handleUFoundMsg(std::vector<std::string> args) {
   ui_debug("handling ufoundmsg");
+  enchB->setEnabled(true);
   consoleMsg("Your solution was confirmed!");
 }
 
@@ -296,11 +334,13 @@ void GUI::gui_handleHeFoundMsg(std::vector<std::string> args) {
   std::string user = args[0];
   int coups = stoi(args[1]);
   ui_debug("handling hefoundmsg");
+  enchB->setEnabled(true);
   consoleMsg("User "+user+" found a solution in "+std::to_string(coups)+"moves.");
 }
 
 void GUI::gui_handleEndThinkMsg(std::vector<std::string> args) {
   ui_debug("handling endthinkmsg");
+  enchB->setEnabled(true);
   consoleMsg("End of thinking phase.");
 }
 

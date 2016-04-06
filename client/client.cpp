@@ -49,11 +49,10 @@ void client::send_message(std::string message) {
 }
 
 std::string client::recv_message() {
-  cl_debug("Receiving...");
+  cl_debug("Waiting for message...");
   char message [MSG_MAX_SIZE];
   read(sock, message, sizeof message);
   std::string str(message);
-  cl_debug("Received!");
   return str;
 }
 

@@ -23,7 +23,7 @@ Robot::Robot(QWidget* parent, repr* rep, color col, int x, int y) :
   setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);  
 }
 
-QPixmap scPm(char* path, int h, int w) {
+QPixmap scPm(const char* path, int h, int w) {
   QPixmap pm(path);
   QPixmap sc = pm.scaled(h, w);
   return sc;

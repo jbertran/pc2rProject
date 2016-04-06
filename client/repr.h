@@ -36,6 +36,7 @@ public:
 
   /** Operations **/
   void setRobot(color c, coord co);
+  void setRobotCible(color c);
   void setCible(coord co);
   void addWall(int x, int y, direction d);
   coord moveRobot(color c, direction d);

@@ -25,6 +25,7 @@ void qSessionThread::run() {
   Phase current_ph = Phase::IDLE;
   bool shouldrun = true;
   while (shouldrun) {
+    /** Await message, then parse it and run the command **/
     std::string msg = connexion->recv_message();
     std::vector<std::string> args = getArgs(msg);
 
@@ -151,6 +152,7 @@ void qSessionThread::run() {
       }
       break;
     default:
+      emit handleUnknownMessage(msg);
       break;
     }
   }

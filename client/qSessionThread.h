@@ -22,6 +22,7 @@ protected:
 
 signals:
   /** General messages **/
+  void handleUnknownMessage(std::string msg);
   void handleConnectMsg(std::vector<std::string> args);
   void handleLeftMsg(std::vector<std::string> args);
   void handleDiscMsg(std::vector<std::string> args);

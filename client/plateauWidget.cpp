@@ -6,6 +6,14 @@
  * Maintient une liste des mouvements du joueur
  */
 
+// #define PL_DEBUG 1
+
+#ifdef PL_DEBUG
+#define pl_debug(str) { std::cout << str << std::endl; }
+#else
+#define pl_debug(str) ;
+#endif
+
 PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
   QFrame(parent), 
   guiRepr(new repr()),
@@ -14,7 +22,6 @@ PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
   setFrameStyle(QFrame::Panel | QFrame::Raised);
   setAutoFillBackground(true);
   // Init robots
-  std::vector<Robot*> robots;
   for (int i = 0; i < 4; i++) {
     coord xy = guiRepr->getRobots()[i];
     robots.push_back(new Robot(this, guiRepr, color(i), xy.x, xy.y));
@@ -29,6 +36,15 @@ PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
   }
 }
 
+Robot* PlateauWidget::getRobot(color c) {
+  return robots[(int) c];
+}
+
+void PlateauWidget::setRobot(color c, coord co) {
+  Robot* r = getRobot(c);
+  r->setX(co.x);
+  r->setY(co.y);
+}
 
 void PlateauWidget::paintEvent(QPaintEvent *pe) {
   QFrame::paintEvent(pe);
@@ -44,7 +60,6 @@ void PlateauWidget::paintEvent(QPaintEvent *pe) {
     painter->drawLine(i*cSize, 0, i*cSize, NB_CASES*cSize); // Vertical
     painter->drawLine(0, i*cSize, NB_CASES*cSize, i*cSize); // Horizontal
   }
-  guiRepr->addWall(2, 2, stodir('B')); // Testing
   /* Paint the grid walls */
   paintWalls(guiRepr->getMurs(), painter);
   /* Paint the target*/
@@ -127,6 +142,16 @@ void PlateauWidget::resizeEvent(QResizeEvent *qre) {
  *   Plateau SLOTS
  */
 
+void PlateauWidget::addWallRepr(int x, int y, direction d) {
+  pl_debug("Add wall to board repr");
+  guiRepr->addWall(x, y, d);
+}
+
+void PlateauWidget::resetRepr() {
+  pl_debug("Reset repr");
+  guiRepr = new repr;
+}
+
 void PlateauWidget::undo() {
   if (!(moveList->empty())){
     s_move m = moveList->front();
@@ -161,8 +186,15 @@ void PlateauWidget::reset() {
 void PlateauWidget::valider() {
   coord robot = guiRepr->getRobot(guiRepr->getRobotCible());
   coord cible = guiRepr->getCible();
-  if(cible.x == robot.x && cible.y == robot.y) {
-    std::cout << "jdsioqjdqs" << std::endl;
+  if (cible.x == robot.x && cible.y == robot.y) {
+    std::list<s_move> revMoves(*moveList);
+    revMoves.reverse();
+    std::string moves = "";
+    for (s_move m : revMoves) {
+      moves = moves + coltos(m.col);
+      moves = moves + dirtos(m.dir);
+    }
+    emit sendMoves(moves);
   }
 }
 

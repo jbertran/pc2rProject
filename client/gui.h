@@ -5,6 +5,7 @@
 #include "repr.h"
 #include "qSessionThread.h"
 #include "tools.h"
+#include "plateauWidget.h"
 #include <QMainWindow>
 #include <QTextEdit>
 #include <QLineEdit>
@@ -14,7 +15,9 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QStackedWidget>
+#include <QCloseEvent>
 #include <iostream>
+#include <QInputDialog>
 
 namespace Ui {
   class GUI;
@@ -35,6 +38,9 @@ public:
 
 public slots:
   void hskDone();
+  
+  /** General server-side commands **/
+  void gui_handleUnknownMessage(std::string msg);
   void gui_handleConnectMsg(std::vector<std::string> args);
   void gui_handleLeftMsg(std::vector<std::string> args);
   void gui_handleDiscMsg(std::vector<std::string> args);
@@ -64,22 +70,41 @@ public slots:
   void gui_handleEndSolveMsg(std::vector<std::string> args);
   void gui_handleTimeoutMsg(std::vector<std::string> args);
 
+  /** Client-side commands **/
+  void encherir();
+  void trouve();
+  void clientSendMoves(std::string s);
+  
+signals:
+  void resetBoard();
+  void updateBoard();
+  void addWallBoard(int x, int y, direction d);
+  void moveRobot(color c, coord co);
+  void beginEnch();
+  void yourTurnSol();
+
+protected:
+  void closeEvent(QCloseEvent* cE);
+
 private:
   /* Vars à conserver pour fonctionnement */
   Ui::GUI *ui;
   client* guiClient;
   std::unordered_map<std::string, int> scores;
-  repr* guiRepr;
+  std::string username;
   
   /* Vars QT à conserver */
   QStackedWidget* stack;
+  PlateauWidget* plateau;
   QWidget* gameLayout;
   QWidget* hskLayout;
   QLineEdit* hsk_uname;
   QLineEdit* chat;
   QTextEdit* console;
   QTextEdit* chatwind;
-  std::string username;
+  QPushButton* enchB;
+  QPushButton* validB;
+  QPushButton* foundB;
   void setupThreadConnections(qSessionThread* thr);
   void setupHsk();
   void setupGame();
