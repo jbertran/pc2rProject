@@ -158,7 +158,7 @@ let troplong users =
   "TROPLONG/"^users^"/\n"
 
 let message args =
-  "MESSAGE/"^(List.hd args)^"/"^(List.fold_left (fun acc arg -> arg^"/"^acc) "" args )^"\n"
+  "MESSAGE/"^(List.nth args 0)^"/"^(List.nth args 1)^"\n"
 	                                            
 (*-----------------------------------*)
 (*Fonctions de gestions de la session*)
@@ -238,7 +238,7 @@ and timeout_reflexion _ =
   Mutex.unlock mutex_phase;
   Mutex.unlock mutex_joueurL
 
-(* Fonction appele pour in0,0itialiser les ressources au debut de la phase de reflexion *)
+(* Fonction appele pour initialiser les ressources au debut de la phase de reflexion *)
 and begin_reflexion () = 
   incr tourNum;
   GameState.new_puzzle ();

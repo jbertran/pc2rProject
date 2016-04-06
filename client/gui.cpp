@@ -5,7 +5,6 @@
 #include "robot.h"
 #include "repr.h"
 
-#define UI_DEBUG 1
 #ifdef UI_DEBUG
 #define ui_debug(str) { std::cout << str << std::endl; }
 #else
@@ -60,6 +59,8 @@ void GUI::setupThreadConnections(qSessionThread* thr){
 		   SLOT(gui_handleYouBidMsg(std::vector<std::string>)));
   QObject::connect(thr, SIGNAL(handleHeBidsMsg(std::vector<std::string>)), this,
 		   SLOT(gui_handleHeBidsMsg(std::vector<std::string>)));
+  QObject::connect(thr, SIGNAL(handleValidBid(std::vector<std::string>)), this, 
+		   SLOT(gui_handleValidBid(std::vector<std::string>)));
   QObject::connect(thr, SIGNAL(handleFailBidMsg(std::vector<std::string>)), this,
 		   SLOT(gui_handleFailBidMsg(std::vector<std::string>)));
   QObject::connect(thr, SIGNAL(handleEndAuctionMsg(std::vector<std::string>)), this,
@@ -120,10 +121,6 @@ void GUI::consoleMsg(std::string msg) {
   console->append(QString::fromUtf8(msg.c_str()));
 }
 
-void GUI::sendChatMsg(std::string msg) {
-  std::string send = "MESSAGE/" + msg + "/\n";
-  guiClient->send_message(send);
-}
 
 void GUI::setupGame() {
   QLayout* mainLayout = new QVBoxLayout;
@@ -172,13 +169,19 @@ void GUI::setupGame() {
   // Widget de chat et console
   QLayout* dispLayout = new QVBoxLayout;
   QLayout* chatLayout = new QVBoxLayout;
+  QLayout* chatbar = new QHBoxLayout;
+  QPushButton* send = new QPushButton("Send");
+  QObject::connect(send, SIGNAL(clicked()), this, SLOT(sendChatMsg()));
+  send->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
   console = new QTextEdit;
   chatwind = new QTextEdit;
   chat = new QLineEdit;
+  chatbar->addWidget(chat);
+  chatbar->addWidget(send);
   chatwind->setReadOnly(true);
   console->setReadOnly(true);
   chatLayout->addWidget(chatwind);
-  chatLayout->addWidget(chat);
+  chatLayout->addItem(chatbar);
   dispLayout->addItem(chatLayout);
   dispLayout->addWidget(console);
   gameScreen->addItem(dispLayout);
@@ -187,7 +190,18 @@ void GUI::setupGame() {
 }
 
 void GUI::closeEvent(QCloseEvent* cE) {
+  guiClient->send_message("SORT/"+username+"/\n");
   guiClient->terminate();
+}
+
+void GUI::sendChatMsg() {
+  std::string msg = chat->text().toStdString();
+  if (msg.compare("") != 0) {
+    std::string command = "MESSAGE/"+username+"/"+msg+"/\n";
+    guiClient->send_message(command);
+    recvMsg("You", msg);
+    chat->clear();
+  }
 }
 
 void GUI::encherir() {
@@ -198,7 +212,8 @@ void GUI::encherir() {
 void GUI::trouve() {
   int coups = QInputDialog::getInt(this, trUtf8("Solution"), 
 				  trUtf8("Nombre de coups trouvé"));
-  guiClient->send_message("TROUVE/"+username+"/"+std::to_string(coups)+"/\n");
+  std::string comm = SOLCOMM_REF;
+  guiClient->send_message(comm+"/"+username+"/"+std::to_string(coups)+"/\n");
 }
 
 void GUI::clientSendMoves(std::string moves) {
@@ -291,9 +306,12 @@ void GUI::gui_handleTurnMsg(std::vector<std::string> args) {
   // Hard-coded for single target trailing the robot pos
   for (size_t i = 0; i < pos.size() - 1; i++) {
     plateau->getRepr()->setRobot((color) i, pos[i]);
+    plateau->setRobot((color) i, pos[i]);
   }
-  plateau->getRepr()->setRobotCible(stocol(puzzle[puzzle.length()-2]));
+  plateau->setRobotsOrigin();
+  plateau->getRepr()->setRobotCible(stocol(puzzle[puzzle.length()-1]));
   plateau->getRepr()->setCible(pos[pos.size() - 1]);
+  plateau->update();
   
   // Dpkg the score recap for current players
   std::string tmp = "";
@@ -302,8 +320,6 @@ void GUI::gui_handleTurnMsg(std::vector<std::string> args) {
     bilan = bilan.substr(1, std::string::npos);
   }
   int tour = stoi(tmp);
-  std::cout << "Tour numéro " << tour << std::endl;
-
   // Bilan assumed correctly formatted
   bilan = bilan.substr(1, bilan.length() - 2);
   bilan = remove(bilan, ')');
@@ -313,12 +329,15 @@ void GUI::gui_handleTurnMsg(std::vector<std::string> args) {
     this->scores[nv[0]] = stoi(nv[1]);
   }
   consoleMsg("Server provided new turn description.");
+  std::string scoremsg = "\nScores at turn "+std::to_string(tour)+": \n";
+  for (const auto& kv : scores)
+    scoremsg += kv.first + ": " + std::to_string(kv.second) + "\n";
+  consoleMsg(scoremsg);
 }
 
 void GUI::gui_handleWinnerMsg(std::vector<std::string> args) {
   std::string user = args[0];
   ui_debug("handling winnermsg");
-  std::cout << user << " is the winner!" << std::endl;
   consoleMsg("Winner: "+user);
 }
 
@@ -359,10 +378,15 @@ void GUI::gui_handleHeBidsMsg(std::vector<std::string> args) {
   consoleMsg("User "+user+" bid "+std::to_string(coups)+"moves");
 }
 
+void GUI::gui_handleValidBid(std::vector<std::string> args) {
+  ui_debug("handling validbidmsg");
+  consoleMsg("Your bid was accepted.");
+}
+
 void GUI::gui_handleFailBidMsg(std::vector<std::string> args) {
   std::string user = args[0];
   ui_debug("handling failbidmsg");
-  consoleMsg("User "+user+"\'s bid failed");
+  consoleMsg("Your bid failed: conflicts with user"+user+"'s.");
 }
 
 void GUI::gui_handleEndAuctionMsg(std::vector<std::string> args) {
@@ -388,6 +412,13 @@ void GUI::gui_handleHisSolMsg(std::vector<std::string> args) {
     dvect.push_back(cd);
     i += 2;
   }
+  // Reset robots
+  plateau->reset();
+  // Play out the solution
+  for (size_t i = 0; i < dvect.size(); i++) {
+    coldir cd = dvect[i];
+    plateau->moveRobot(cd.col, cd.dir);
+  }
   consoleMsg("Displaying user "+user+"\'s solution...");
 }
 
@@ -399,7 +430,6 @@ void GUI::gui_handleGoodSolMsg(std::vector<std::string> args) {
 void GUI::gui_handleBadSolMsg(std::vector<std::string> args) {
   std::string user = args[0];
   ui_debug("handling badsolmsg");
-  std::cout << "Solution rejetée, au tour de " << user << std::endl;
   if (user.compare(this->username) == 0)
     consoleMsg("Your solution was rejected. Your turn.");
   else
@@ -408,16 +438,14 @@ void GUI::gui_handleBadSolMsg(std::vector<std::string> args) {
 
 void GUI::gui_handleEndSolveMsg(std::vector<std::string> args) {
   ui_debug("handling endsolvemsg");
-  std::cout << "Fin du tour" << std::endl;
   consoleMsg("End of solution phase");
 }
 
 void GUI::gui_handleTimeoutMsg(std::vector<std::string> args) {
   std::string user = args[0];
   ui_debug("handling timeoutmsg");
-  std::cout << "Timeout du joueur précédent. Nouveau joueur actif: " << user << std::endl;
   if (user.compare(this->username) == 0)
-    consoleMsg("My turn to offer a solution");
+    consoleMsg("Your turn to offer a solution");
   else 
     consoleMsg("User "+user+"'s turn to offer a solution");
 }

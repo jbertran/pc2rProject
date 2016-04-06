@@ -24,9 +24,13 @@ PlateauWidget::PlateauWidget(QWidget* parent)://, session* maSession) :
   // Init robots
   for (int i = 0; i < 4; i++) {
     coord xy = guiRepr->getRobots()[i];
-    robots.push_back(new Robot(this, guiRepr, color(i), xy.x, xy.y));
+    robots.push_back(new Robot(guiRepr, color(i), xy.x, xy.y, this));
   }
   for (Robot* r : robots) {
+    QObject::connect(this, SIGNAL(robotsAtOrigin()),
+		     r, SLOT(atOrigin()));
+    QObject::connect(this, SIGNAL(setRobotRepr(repr*)), 
+		     r, SLOT(setRepr(repr*)));
     QObject::connect(this, SIGNAL(resetRobot(color)),
 		     r, SLOT(reset(color)));
     QObject::connect(this, SIGNAL(undoMove(color, coord)),
@@ -47,8 +51,6 @@ void PlateauWidget::setRobot(color c, coord co) {
 }
 
 void PlateauWidget::paintEvent(QPaintEvent *pe) {
-  QFrame::paintEvent(pe);
-  /* Paint the grid  */
   int h = std::min(size().height(), size().width()); // Always a square
   int cSize = h / NB_CASES;
   QPainter * painter = new QPainter(this);
@@ -56,14 +58,18 @@ void PlateauWidget::paintEvent(QPaintEvent *pe) {
   pen->setWidth(1);
   painter->setPen(*pen);
   painter->setBrush(Qt::black);
+  /* Paint the grid */
   for (int i = 0; i <= NB_CASES; i++) {
     painter->drawLine(i*cSize, 0, i*cSize, NB_CASES*cSize); // Vertical
     painter->drawLine(0, i*cSize, NB_CASES*cSize, i*cSize); // Horizontal
   }
   /* Paint the grid walls */
   paintWalls(guiRepr->getMurs(), painter);
-  /* Paint the target*/
+  /* Paint the target */
   paintTarget(guiRepr->getRobotCible(), guiRepr->getCible(), cSize, painter);
+  /* Paint the robots */
+  for(Robot* r : robots)
+    r->update();
   painter->end();
 }
 
@@ -150,6 +156,8 @@ void PlateauWidget::addWallRepr(int x, int y, direction d) {
 void PlateauWidget::resetRepr() {
   pl_debug("Reset repr");
   guiRepr = new repr;
+  moveList = new std::list<s_move>;
+  emit setRobotRepr(guiRepr);
 }
 
 void PlateauWidget::undo() {
@@ -183,6 +191,10 @@ void PlateauWidget::reset() {
   emit counterReset();
 }
 
+void PlateauWidget::setRobotsOrigin() {
+  emit robotsAtOrigin();
+}
+
 void PlateauWidget::valider() {
   coord robot = guiRepr->getRobot(guiRepr->getRobotCible());
   coord cible = guiRepr->getCible();
@@ -201,4 +213,9 @@ void PlateauWidget::valider() {
 void PlateauWidget::addMove(s_move m) {
   moveList->push_front(m);
   emit counterIncr();
+}
+
+void PlateauWidget::moveRobot(color c, direction d) {
+  Robot* r = getRobot(c);
+  r->receiveDir(d);
 }

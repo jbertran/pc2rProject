@@ -24,16 +24,20 @@ repr::repr() {
   }
   this->murs = murs;
   /** Murs externes - mis par sécurité **/
+  addExternalWalls();
+  for (int i = 0; i < 4; i++)
+    robots[i] = { i*2, i*2 };
+  robot_cible = color::Rouge;
+  cible={0,0};
+}
+
+void repr::addExternalWalls() {
   for (int i = 0; i < PLAT_SIZE; i++) {
     addWall(0, i, direction::Gauche);
     addWall(PLAT_SIZE-1, i, direction::Droite);
     addWall(i, 0, direction::Haut);
     addWall(i, PLAT_SIZE-1, direction::Bas);
   }
-  for (int i = 0; i < 4; i++)
-    robots[i] = { i*2, i*2 };
-  robot_cible = color::Rouge;
-  cible={0,0};
 }
 
 bool repr::hasWall(int x, int y, direction d) {

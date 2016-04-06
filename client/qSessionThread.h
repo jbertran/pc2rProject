@@ -42,6 +42,7 @@ signals:
   /** Auction Phase Messages **/
   void handleYouBidMsg(std::vector<std::string> args);
   void handleHeBidsMsg(std::vector<std::string> args);
+  void handleValidBid(std::vector<std::string> args);
   void handleFailBidMsg(std::vector<std::string> args);
   void handleEndAuctionMsg(std::vector<std::string> args);
 

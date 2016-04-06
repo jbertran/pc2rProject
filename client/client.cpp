@@ -1,9 +1,8 @@
 #include "client.h"
 #include "tools.h"
 
-#define MSG_MAX_SIZE 256
+#define MSG_MAX_SIZE 2048
 
-#define CL_DEBUG 1
 #ifdef CL_DEBUG
 #define cl_debug(str) { std::cout << str << std::endl; }
 #else
@@ -51,7 +50,10 @@ void client::send_message(std::string message) {
 std::string client::recv_message() {
   cl_debug("Waiting for message...");
   char message [MSG_MAX_SIZE];
-  read(sock, message, sizeof message);
+  if (read(sock, message, sizeof message) < 0) {
+    std::cerr << "Socket read error! Closing connection..." << std::endl;
+    exit(EXIT_FAILURE);
+  }
   std::string str(message);
   return str;
 }

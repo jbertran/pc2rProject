@@ -9,7 +9,7 @@
  * Permet de track les positions et les mouvements
  */
 
-Robot::Robot(QWidget* parent, repr* rep, color col, int x, int y) : 
+Robot::Robot(repr* rep, color col, int x, int y, QWidget* parent) : 
   QWidget(parent),
   guiRepr(rep),
   c(col),
@@ -20,7 +20,8 @@ Robot::Robot(QWidget* parent, repr* rep, color col, int x, int y) :
   int pSize = std::min(parentWidget()->size().width(), 
 		       parentWidget()->size().height());
   int cSize = pSize/NB_CASES;
-  setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);  
+  setGeometry(getX()*cSize, getY()*cSize, cSize, cSize);
+  repaint();
 }
 
 QPixmap scPm(const char* path, int h, int w) {
@@ -101,6 +102,15 @@ void Robot::mousePressEvent(QMouseEvent* qme) {
     receiveDir(direction::Gauche);
   if (east->contains(qme->x(), qme->y()))
     receiveDir(direction::Droite);
+}
+
+void Robot::atOrigin() {
+  origin.x = getX();
+  origin.y = getY();
+}
+
+void Robot::setRepr(repr* newRepr) {
+  guiRepr = newRepr;
 }
 
 void Robot::moveRobot(color col, coord xy) {

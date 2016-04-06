@@ -20,8 +20,7 @@ class Robot : public QWidget
   Q_OBJECT
 
 public:
-  explicit Robot(QWidget* parent = 0, repr* rep = 0,
-		 color c = Rouge, int x = 0, int y = 0);
+  Robot(repr* rep, color c, int x, int y, QWidget* parent = 0);
   color getColor() { return c; }
   int getX() { return posX; };
   int getY() { return posY; };
@@ -32,6 +31,8 @@ public:
 public slots:
   void moveRobot(color c, coord xy);
   void reset(color c);
+  void atOrigin();
+  void setRepr(repr* newRepr);
 signals:
   void robotMoved(s_move m);
 protected:

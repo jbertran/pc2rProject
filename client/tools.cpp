@@ -9,24 +9,25 @@
 #include "client.h"
 #include "tools.h"
 
-#define MSG_SIZE 1024
+#define MSG_SIZE 2048
 
 /** DATA HELPERS **/
 std::unordered_map<std::string, Incoming> servermsgs = 
   {
     {"BIENVENUE",    Incoming::WELCOME},
     {"CONNECTE",     Incoming::CONNECTE},
-    {"SORT",         Incoming::SORTI},
-    {"DECONNEXION",  Incoming::DISC},
     {"SESSION",      Incoming::SESSION},
+    {"DECONNEXION",  Incoming::DISC},
+    {"VALIDATION",   Incoming::VALID},
     {"VAINQUEUR",    Incoming::VAINQ},
     {"TOUR",         Incoming::TOUR},
     {"TUASTROUVE",   Incoming::TUAT},
     {"ILATROUVE",    Incoming::ILAT},
     {"FINREFLEXION", Incoming::FINREF},
+    {"SORT",         Incoming::SORTI},
     {"TUENCHERE",    Incoming::TUENCH},
-    {"ECHECENCHERE", Incoming::ECHECENCH},
-    {"ILENCHERE",    Incoming::ILENCH},
+    {"ECHEC",        Incoming::ECHECENCH},
+    {"NOUVELLEENCHERE",  Incoming::ILENCH},
     {"FINENCHERE",   Incoming::FINENCH},
     {"SASOLUTION",   Incoming::SASOL},
     {"BONNE",        Incoming::BONNE},
@@ -64,7 +65,10 @@ std::vector<std::string> split(std::string msg, char delim) {
 
 Incoming getCmd(std::string msg) {
   std::vector<std::string> vect = split(msg, '/');
-  return servermsgs[vect[0]];
+  if (servermsgs.find(vect[0]) != servermsgs.end())
+    return servermsgs[vect[0]];
+  else 
+    return Incoming::UNKNOWN;
 }
 
 std::vector<std::string> getArgs(std::string msg) {

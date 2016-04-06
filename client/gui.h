@@ -19,6 +19,13 @@
 #include <iostream>
 #include <QInputDialog>
 
+#define VERSION 1
+#ifdef VERSION
+#define SOLCOMM_REF "SOLUTION"
+#else
+#define SOLCOMM_REF "TROUVE"
+#endif
+
 namespace Ui {
   class GUI;
 }
@@ -60,6 +67,7 @@ public slots:
   /** Auction Phase Messages **/
   void gui_handleYouBidMsg(std::vector<std::string> args);
   void gui_handleHeBidsMsg(std::vector<std::string> args);
+  void gui_handleValidBid(std::vector<std::string> args);
   void gui_handleFailBidMsg(std::vector<std::string> args);
   void gui_handleEndAuctionMsg(std::vector<std::string> args);
 
@@ -73,13 +81,13 @@ public slots:
   /** Client-side commands **/
   void encherir();
   void trouve();
+  void sendChatMsg();
   void clientSendMoves(std::string s);
   
 signals:
   void resetBoard();
   void updateBoard();
   void addWallBoard(int x, int y, direction d);
-  void moveRobot(color c, coord co);
   void beginEnch();
   void yourTurnSol();
 

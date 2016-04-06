@@ -39,6 +39,7 @@ public:
   void setRobotCible(color c);
   void setCible(coord co);
   void addWall(int x, int y, direction d);
+  void addExternalWalls();
   coord moveRobot(color c, direction d);
   repr clone();
   bool is_valid(std::vector<coldir>);

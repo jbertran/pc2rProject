@@ -1,7 +1,5 @@
 #include "qSessionThread.h"
 
-#define ST_DEBUG 1
-
 #ifdef ST_DEBUG
 #define st_debug(str) { std::cout << str << std::endl; }
 #else
@@ -31,6 +29,10 @@ void qSessionThread::run() {
 
     /** General commands **/
     switch (getCmd(msg)) {
+    case Incoming::UNKNOWN:
+      st_debug("UNKNOWN received");
+      emit handleUnknownMessage(msg);
+      break;
     case Incoming::CONNECTE:
       st_debug("CONNECTE received");
       emit handleConnectMsg(args);
@@ -112,6 +114,10 @@ void qSessionThread::run() {
 	st_debug("ILENCH received");
 	emit handleHeBidsMsg(args);
 	break;
+      case Incoming::VALID:
+	st_debug("VALID received");
+	emit handleValidBid(args);
+	break;
       case Incoming::FINENCH:
 	st_debug("FINENCH received");
 	emit handleEndAuctionMsg(args);
@@ -152,7 +158,6 @@ void qSessionThread::run() {
       }
       break;
     default:
-      emit handleUnknownMessage(msg);
       break;
     }
   }
