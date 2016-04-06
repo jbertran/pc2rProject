@@ -158,7 +158,7 @@ let troplong users =
   "TROPLONG/"^users^"/\n"
 
 let message args =
-  "MESSAGE/"^(List.hd args)^"/"^(List.nth args 1)^"/\n"
+  "MESSAGE/"^(List.hd args)^"/"^(List.fold_left (fun acc arg -> arg^"/"^acc) "" args )^"\n"
 	                                            
 (*-----------------------------------*)
 (*Fonctions de gestions de la session*)
@@ -546,8 +546,7 @@ let boucle_joueur player =
 		  | 4 -> if(List.length args) = 2 then traitement_solution player args
 		  		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
 		  		flush player.outchan end
-		  | 5 -> if(List.length args) = 2 then traitement_message player args
-		  		else begin output_string player.outchan "Nombre d'argument incorrecte\n";
+		  | 5 -> begin traitement_message player args;
 		  		flush player.outchan end
 		  | _ ->
 		     begin 
