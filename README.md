@@ -120,6 +120,8 @@ Pour gérer le début et la fin des différentes phase des sessions, nous avons 
 
 Les timer sont les timer d'Unix qui lancent un signal SIGALRM à la fin du temps indiqué. Ainsi à chaque fois que nous démarrons un nouveau timer nous initialisons le handler de SIGALRM avec la fonction correspondant au timeout de cette phase.
 
+Sur le graphe suivant vous pourrez observer les différents appels des fonctions qui gèrent les phases. Cependant il n'affiche pas le fait que lors d'une déconnexion, si le nombre de joueur deviens inférieur à 2, alors on termine la phase courante en appelant `fin_session`.
+
 ![phases](graphePhase.png)
 
 ### Envoi des requêtes aux clients
