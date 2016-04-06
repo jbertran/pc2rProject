@@ -42,10 +42,13 @@ ln -s path/libGL.so.x /usr/lib/libGL.so
 
 ## Outils
 
+* Chaque fichier hormis tools est équipé d'un switch de debug - il suffit de `#define` le nom présent à l'en-tête du .cpp pour avoir des messages de debug sur la plupart des fonctions clés du fichier en question.
 * Helpers pour la conversion string -> enum pour couleur et direction
 * Helpers pour le parsing des messages serveur - fonction split selon un caractère, fonction de récupération des arguments et de la commande étant donné le message entier reçu par le client en string
 
 ## Exécution du client
+
+__Note__: les commandes envoyées par le client sont basées sur la première version du sujet, donc avec deux commandes "SOLUTION", une pour la phase de réflexion et une pour la phase de résolution. Pour le rendre compatible avec les sujets basés sur la version mise à jour du sujet, il suffit de retirer `#define VERSION 1` dans le fichier gui.h.
 
 ### Au lancement
 
