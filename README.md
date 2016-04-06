@@ -55,7 +55,7 @@ Le client attend la saisie d'un pseudo par l'utilisateur pour démarrer les éch
 
 Chaque réception de commande par le client dans le QThread est divisée en sa commande et ses arguments. La commande aiguille le flux de la boucle d'interaction vers le signal à envoyer à la partie GUI, auquel on fournit systématiquement les arguments, qui sont traités dans le thread principal. Une commande inconnue est affichée sur la fenêtre console du client.
 
-L'utilisateur peut à tout moment cliquer sur les boutons (pourvu qu'ils soient actifs) et envoyer des commandes au serveur.
+L'utilisateur peut à tout moment cliquer sur les boutons (pourvu qu'ils soient actifs) et envoyer des commandes au serveur. Dans le cas du bouton d'enchère, on préfère le désactiver sauf en phase d'enchères pour ne pas surcharger l'interface. Dans le cas du bouton de validation, on vérifie également la validité de la solution côté client, et on n'envoie la solution au serveur que si le client trouve celle-ci valide.
 
 # Serveur
 
