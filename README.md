@@ -1,5 +1,8 @@
-% Projet PC2R 2016
-% Clément Bertrand, Jordi Bertran de Balanda
+# pc2rProject
+
+Project for the PC2R course, M1S2 at UPMC: Ricochet Robots client/server application.
+
+Clément Bertrand, Jordi Bertran de Balanda
 
 # Client
 
